@@ -13,7 +13,6 @@ import {
 } from '../utils/conversation.util'
 import { formatDisplayDate } from '../utils/message.util'
 import { useChatContext } from '../context/chat-context'
-import { ChatWallpaper } from './chat-wallpaper'
 
 interface ConversationMessagesListProps {
   conversation: Conversation
@@ -59,10 +58,7 @@ export function ConversationMessagesList({
     formatDisplayDate(visibleDate) === 'Hoy'
 
   return (
-    <div className='flex-1 min-h-0 relative bg-[#f4f6f8]/70 dark:bg-[#0a0f1d] w-full overflow-hidden'>
-      {/* Fondo estilo Wallpaper Corporativo SDI */}
-      <ChatWallpaper />
-
+    <div className='flex-1 min-h-0 relative w-full overflow-hidden'>
       <ScrollArea ref={scrollRef as any} className='relative z-10 h-full w-full'>
         <div className='space-y-4 p-3 sm:p-4 text-sm w-full min-w-0'>
           {/* Indicador de carga de mensajes anteriores al hacer scroll hacia arriba */}

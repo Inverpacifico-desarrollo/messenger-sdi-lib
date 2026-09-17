@@ -58,8 +58,8 @@ export function ConversationComposer({
 
   if (isClosed) {
     return (
-      <div className='shrink-0 border-t border-neutral-200/80 bg-neutral-50/90 p-3 text-center dark:border-neutral-800 dark:bg-neutral-950/80'>
-        <div className='flex items-center justify-center gap-2 rounded-xl border border-neutral-200/60 bg-white/70 px-4 py-2 text-xs font-medium text-neutral-500 shadow-2xs dark:border-neutral-800/80 dark:bg-neutral-900/60 dark:text-neutral-400'>
+      <div className='shrink-0 px-3 pb-3 pt-1 text-center sm:px-4 sm:pb-4'>
+        <div className='flex items-center justify-center gap-2 rounded-xl border border-neutral-200/80 bg-white/85 dark:border-neutral-800/80 dark:bg-neutral-900/85 backdrop-blur-md px-4 py-2 text-xs font-medium text-neutral-500 shadow-xs dark:text-neutral-400'>
           <Lock className='size-3.5 text-neutral-400 dark:text-neutral-500 shrink-0' />
           <span>Esta conversación ha sido finalizada y no admite nuevos mensajes.</span>
         </div>
@@ -81,11 +81,11 @@ export function ConversationComposer({
   }
 
   return (
-    <div className='shrink-0  p-2 dark:border-neutral-800 dark:bg-neutral-900'>
-      {/* Campo de Texto y Botones */}
+    <div className='shrink-0 px-3 pb-3 pt-1 sm:px-4 sm:pb-4'>
+      {/* Campo de Texto y Botones Flotantes */}
       <div className='relative'>
         {pendingFile && (
-          <div className='mb-2 flex items-center gap-2 rounded-xl border border-neutral-200 bg-white p-2 dark:border-neutral-800 dark:bg-neutral-800/40'>
+          <div className='mb-2 flex items-center gap-2 rounded-xl border border-neutral-200/80 bg-white/95 backdrop-blur-md p-2 shadow-xs dark:border-neutral-700/80 dark:bg-neutral-800/95'>
             {pendingFile.type.startsWith('image/') ? (
               <img
                 src={pendingPreviewUrl || ''}
@@ -112,12 +112,12 @@ export function ConversationComposer({
             </Button>
           </div>
         )}
-        <div className='flex items-center gap-1 rounded-2xl border border-neutral-200 bg-white px-2 py-1 shadow-xs dark:border-neutral-700 dark:bg-neutral-800'>
+        <div className='flex items-center gap-1.5 rounded-2xl border border-neutral-200/80 bg-white/95 backdrop-blur-md px-2.5 py-1.5 shadow-sm transition-all focus-within:border-blue-500/50 focus-within:ring-2 focus-within:ring-blue-500/10 focus-within:shadow-md dark:border-neutral-700/80 dark:bg-neutral-800/95'>
           <label
             className='flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-700 dark:hover:text-neutral-200'
             title='Adjuntar archivo'
           >
-            <Paperclip className='size-3.5' />
+            <Paperclip className='size-4' />
             <input
               type='file'
               className='sr-only'
@@ -133,7 +133,7 @@ export function ConversationComposer({
             onKeyDown={handleKeyDown}
             placeholder={`Responder a ${conversationName}...`}
             rows={1}
-            className='!min-h-0 !border-transparent max-h-30 flex-1 resize-none overflow-y-hidden rounded-xl bg-transparent px-2 py-1 text-xs leading-5 shadow-none !outline-none focus:!border-transparent focus:!outline-none focus-visible:!border-transparent focus-visible:!ring-0 focus-visible:!outline-none sm:text-sm'
+            className='!min-h-0 !border-transparent max-h-30 flex-1 resize-none overflow-y-hidden rounded-xl bg-transparent px-2 py-1 text-xs leading-5 shadow-none !outline-none focus:!border-transparent focus:!outline-none focus-visible:!border-transparent focus-visible:!ring-0 focus-visible:!outline-none sm:text-sm text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400'
           />
 
           <Button

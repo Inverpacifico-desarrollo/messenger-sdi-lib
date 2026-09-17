@@ -6,6 +6,7 @@ import useConversationChat from '../hooks/use-conversation-chat'
 import { ConversationChatHeader } from './conversation-chat-header'
 import { ConversationMessagesList } from './conversation-messages-list'
 import { ConversationComposer } from './conversation-composer'
+import { ChatWallpaper } from './chat-wallpaper'
 
 export interface ConversationChatPanelProps {
   conversation: Conversation
@@ -45,46 +46,53 @@ export function ConversationChatPanel({
         alwaysShowBackButton={alwaysShowBackButton}
       />
 
-      {/* Área Principal de Mensajes */}
-      <ConversationMessagesList
-        conversation={conversation}
-        messages={chat.messages}
-        optimisticMessages={chat.optimisticMessages}
-        scrollRef={chat.scrollRef}
-        isFetchingNextPage={chat.isFetchingNextPage}
-        hasNextPage={chat.hasNextPage}
-        isLoading={chat.isLoading}
-        isNearBottom={chat.isNearBottom}
-        newMessagesCount={chat.newMessagesCount}
-        visibleDate={chat.visibleDate}
-        onScrollToBottom={chat.scrollToBottom}
-      />
-      {/* <div className='overflow-y-scroll'><pre>{JSON.stringify(chat.messages, null, 2)}</pre></div> */}
+      {/* Cuerpo del Chat con Wallpaper continuo (Mensajes + Typing + Composer flotante) */}
+      <div className='relative flex flex-1 min-h-0 w-full flex-col overflow-hidden bg-[#f4f6f8]/70 dark:bg-[#0a0f1d]'>
+        {/* Fondo estilo Wallpaper Corporativo SDI continuo */}
+        <ChatWallpaper />
 
-      {chat.typingUser && (
-        <div className='flex shrink-0 items-center gap-1.5 border-t border-neutral-200/60 dark:border-neutral-800/60 bg-neutral-50 dark:bg-neutral-950 px-3 py-1.5 text-xs text-neutral-500 dark:text-neutral-400'>
-          <span>{chat.typingUser} está escribiendo</span>
-          <span className='inline-flex gap-0.5' aria-hidden='true'>
-            <span className='size-1 rounded-full bg-neutral-400 animate-pulse' />
-            <span className='size-1 rounded-full bg-neutral-400 animate-pulse delay-75' />
-            <span className='size-1 rounded-full bg-neutral-400 animate-pulse delay-150' />
-          </span>
+        {/* Área Principal de Mensajes */}
+        <ConversationMessagesList
+          conversation={conversation}
+          messages={chat.messages}
+          optimisticMessages={chat.optimisticMessages}
+          scrollRef={chat.scrollRef}
+          isFetchingNextPage={chat.isFetchingNextPage}
+          hasNextPage={chat.hasNextPage}
+          isLoading={chat.isLoading}
+          isNearBottom={chat.isNearBottom}
+          newMessagesCount={chat.newMessagesCount}
+          visibleDate={chat.visibleDate}
+          onScrollToBottom={chat.scrollToBottom}
+        />
+
+        {chat.typingUser && (
+          <div className='relative z-10 flex shrink-0 items-center gap-1.5 px-4 py-1 text-xs text-neutral-500 dark:text-neutral-400 animate-in fade-in duration-150'>
+            <span className='font-medium'>{chat.typingUser} está escribiendo</span>
+            <span className='inline-flex gap-0.5' aria-hidden='true'>
+              <span className='size-1 rounded-full bg-neutral-400 animate-pulse' />
+              <span className='size-1 rounded-full bg-neutral-400 animate-pulse delay-75' />
+              <span className='size-1 rounded-full bg-neutral-400 animate-pulse delay-150' />
+            </span>
+          </div>
+        )}
+
+        {/* Barra de escritura flotante integrada en el chat */}
+        <div className='relative z-10 w-full'>
+          <ConversationComposer
+            inputText={chat.inputText}
+            setInputText={chat.setInputText}
+            onSendMessage={chat.handleSendMessage}
+            onSelectFile={chat.handleSelectFile}
+            pendingFile={chat.pendingFile}
+            onRemoveFile={() => chat.setPendingFile(null)}
+            isSending={chat.isSending}
+            isUploading={chat.isUploading}
+            conversationName={chat.conversationName}
+            isClosed={chat.isClosed}
+          />
         </div>
-      )}
-
-      {/* Respuestas Rápidas y Editor de Mensajes */}
-      <ConversationComposer
-        inputText={chat.inputText}
-        setInputText={chat.setInputText}
-        onSendMessage={chat.handleSendMessage}
-        onSelectFile={chat.handleSelectFile}
-        pendingFile={chat.pendingFile}
-        onRemoveFile={() => chat.setPendingFile(null)}
-        isSending={chat.isSending}
-        isUploading={chat.isUploading}
-        conversationName={chat.conversationName}
-        isClosed={chat.isClosed}
-      />
+      </div>
     </div>
   )
 }
