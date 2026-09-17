@@ -1,5 +1,6 @@
 import { ChatConfig, ChatProvider, FloatingChat } from '@/index';
 import React, { useMemo } from 'react';
+import ConversationsPage from './panel';
 
 const App = () => {
   const config: ChatConfig = useMemo(() => ({
@@ -18,6 +19,7 @@ const App = () => {
   return (
     <ChatProvider config={config}>
       <div className='w-full h-screen bg-slate-500'>
+        <ConversationsPage/>
         <FloatingChat />
       </div>
     </ChatProvider>

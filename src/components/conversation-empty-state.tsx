@@ -5,7 +5,6 @@ import { AlertTriangle, MessageSquarePlus, RefreshCw, Lock } from 'lucide-react'
 import { Button } from '../ui'
 import { useChatContext } from '../context/chat-context'
 import { useCheckHasPermissionMessenger } from '../hooks/use-check-has-permission-messenger'
-import { ChatWallpaper } from './chat-wallpaper'
 
 interface ConversationEmptyStateProps {
   onNewConversation?: () => void
@@ -22,7 +21,7 @@ export function ConversationEmptyState({ onNewConversation }: ConversationEmptyS
 
   if (hasError) {
     return (
-      <div className='relative flex h-full w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'>
+      <div className=' sdi-messenger-root relative flex h-full w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'>
         <div className='absolute inset-x-0 top-0 h-1 bg-red-500/30' />
         <div className='flex max-w-md flex-col items-center px-6 text-center animate-in fade-in duration-200'>
           <div className='mb-5 flex size-16 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10 text-red-600 dark:text-red-400 shadow-xs'>
@@ -53,9 +52,8 @@ export function ConversationEmptyState({ onNewConversation }: ConversationEmptyS
   }
 
   return (
-    <div className='relative flex h-full w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-[#f4f6f8]/50 dark:bg-[#0a0f1d] shadow-xs'>
-      <ChatWallpaper />
-      <div className='absolute inset-x-0 top-0 h-1 bg-blue-500/30 z-10' />
+    <div className=' sdi-messenger-root relative flex h-full w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-[#f4f6f8] dark:bg-[#0a0f1d] shadow-xs'>
+
       <div className='relative z-10 flex max-w-md flex-col items-center px-6 text-center'>
         <div className='mb-5 flex size-16 items-center justify-center rounded-2xl border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 shadow-xs'>
           <MessageSquarePlus className='size-8' />
