@@ -15,6 +15,8 @@ interface ConversationComposerProps {
   isUploading: boolean
   conversationName: string
   isClosed?: boolean
+  readOnly?: boolean
+  readOnlyMessage?: string
 }
 
 export function ConversationComposer({
@@ -27,7 +29,9 @@ export function ConversationComposer({
   isSending,
   isUploading,
   conversationName,
-  isClosed = false
+  isClosed = false,
+  readOnly = false,
+  readOnlyMessage
 }: ConversationComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const maxTextareaHeight = 120
@@ -56,12 +60,17 @@ export function ConversationComposer({
     textarea.style.overflowY = textarea.scrollHeight > maxTextareaHeight ? 'auto' : 'hidden'
   }, [inputText])
 
-  if (isClosed) {
+  if (isClosed || readOnly) {
     return (
       <div className='shrink-0 px-3 pb-3 pt-1 text-center sm:px-4 sm:pb-4'>
         <div className='flex items-center justify-center gap-2 rounded-xl border border-neutral-200/80 bg-white/85 dark:border-neutral-800/80 dark:bg-neutral-900/85 backdrop-blur-md px-4 py-2 text-xs font-medium text-neutral-500 shadow-xs dark:text-neutral-400'>
           <Lock className='size-3.5 text-neutral-400 dark:text-neutral-500 shrink-0' />
-          <span>Esta conversación ha sido finalizada y no admite nuevos mensajes.</span>
+          <span>
+            {readOnlyMessage ||
+              (isClosed
+                ? 'Esta conversación ha sido finalizada y no admite nuevos mensajes.'
+                : 'No se permite enviar mensajes en esta conversación.')}
+          </span>
         </div>
       </div>
     )

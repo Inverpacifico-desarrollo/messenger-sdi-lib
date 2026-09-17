@@ -16,6 +16,10 @@ export interface ConversationChatPanelProps {
   alwaysShowBackButton?: boolean
   onCloseSuccess?: () => void
   showHeader?: boolean
+  showWallpaper?: boolean
+  readOnly?: boolean
+  readOnlyMessage?: string
+  showComposer?: boolean
 }
 
 export function ConversationChatPanel({
@@ -25,7 +29,11 @@ export function ConversationChatPanel({
   onBack,
   alwaysShowBackButton = false,
   onCloseSuccess,
-  showHeader = true
+  showHeader = true,
+  showWallpaper = true,
+  readOnly = false,
+  readOnlyMessage,
+  showComposer = true
 }: ConversationChatPanelProps) {
   const chat = useConversationChat(conversation, {
     onCloseSuccess: () => {
@@ -53,7 +61,7 @@ export function ConversationChatPanel({
       {/* Cuerpo del Chat con Wallpaper continuo (Mensajes + Typing + Composer flotante) */}
       <div className='relative flex flex-1 min-h-0 w-full flex-col overflow-hidden bg-[#f4f6f8]/70 dark:bg-[#0a0f1d]'>
         {/* Fondo estilo Wallpaper Corporativo SDI continuo */}
-        <ChatWallpaper />
+        {showWallpaper && <ChatWallpaper />}
 
         {/* Área Principal de Mensajes */}
         <ConversationMessagesList
@@ -70,7 +78,7 @@ export function ConversationChatPanel({
           onScrollToBottom={chat.scrollToBottom}
         />
 
-        {chat.typingUser && (
+        {chat.typingUser && !readOnly && (
           <div className='relative z-10 flex shrink-0 items-center gap-1.5 px-4 py-1 text-xs text-neutral-500 dark:text-neutral-400 animate-in fade-in duration-150'>
             <span className='font-medium'>{chat.typingUser} está escribiendo</span>
             <span className='inline-flex gap-0.5' aria-hidden='true'>
@@ -82,20 +90,24 @@ export function ConversationChatPanel({
         )}
 
         {/* Barra de escritura flotante integrada en el chat */}
-        <div className='relative z-10 w-full'>
-          <ConversationComposer
-            inputText={chat.inputText}
-            setInputText={chat.setInputText}
-            onSendMessage={chat.handleSendMessage}
-            onSelectFile={chat.handleSelectFile}
-            pendingFile={chat.pendingFile}
-            onRemoveFile={() => chat.setPendingFile(null)}
-            isSending={chat.isSending}
-            isUploading={chat.isUploading}
-            conversationName={chat.conversationName}
-            isClosed={chat.isClosed}
-          />
-        </div>
+        {showComposer && (
+          <div className='relative z-10 w-full'>
+            <ConversationComposer
+              inputText={chat.inputText}
+              setInputText={chat.setInputText}
+              onSendMessage={chat.handleSendMessage}
+              onSelectFile={chat.handleSelectFile}
+              pendingFile={chat.pendingFile}
+              onRemoveFile={() => chat.setPendingFile(null)}
+              isSending={chat.isSending}
+              isUploading={chat.isUploading}
+              conversationName={chat.conversationName}
+              isClosed={chat.isClosed}
+              readOnly={readOnly}
+              readOnlyMessage={readOnlyMessage}
+            />
+          </div>
+        )}
       </div>
     </div>
   )
