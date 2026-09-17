@@ -25,11 +25,17 @@ npm install
 
 ## 💻 3. Entorno de Desarrollo Local (Playground)
 
-El repositorio incluye un entorno interactivo en la carpeta [`playground/`](file:///c:/Users/lhernandez/Desktop/dev/messenger-sdi-lib/playground) para probar los componentes en tiempo real con recarga rápida (HMR):
+El repositorio incluye un entorno interactivo en la carpeta [`playground/`](file:///c:/Users/lhernandez/Desktop/dev/messenger-sdi-lib/playground) para probar los componentes en tiempo real con recarga rápida (HMR).
 
-```bash
-npm run dev
-```
+1. Crea tu archivo de variables locales a partir de la plantilla:
+   ```bash
+   cp .env.example .env
+   ```
+2. Configura tu token (`VITE_AUTH_TOKEN`), URLs y credenciales de WebSocket en `.env`.
+3. Inicia el servidor de desarrollo:
+   ```bash
+   npm run dev
+   ```
 
 Esto levantará el servidor de desarrollo Vite en `http://127.0.0.1:3001`.
 
