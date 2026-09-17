@@ -10,6 +10,8 @@ interface ConversationComposerProps {
     isUploading: boolean;
     conversationName: string;
     isClosed?: boolean;
+    readOnly?: boolean;
+    readOnlyMessage?: string;
 }
-export declare function ConversationComposer({ inputText, setInputText, onSendMessage, onSelectFile, pendingFile, onRemoveFile, isSending, isUploading, conversationName, isClosed }: ConversationComposerProps): React.JSX.Element;
+export declare function ConversationComposer({ inputText, setInputText, onSendMessage, onSelectFile, pendingFile, onRemoveFile, isSending, isUploading, conversationName, isClosed, readOnly, readOnlyMessage }: ConversationComposerProps): React.JSX.Element;
 export {};

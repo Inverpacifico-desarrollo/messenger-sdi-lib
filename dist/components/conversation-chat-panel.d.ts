@@ -7,5 +7,10 @@ export interface ConversationChatPanelProps {
     onBack?: () => void;
     alwaysShowBackButton?: boolean;
     onCloseSuccess?: () => void;
+    showHeader?: boolean;
+    showWallpaper?: boolean;
+    readOnly?: boolean;
+    readOnlyMessage?: string;
+    showComposer?: boolean;
 }
-export declare function ConversationChatPanel({ conversation, onToggleContextPanel, isContextPanelOpen, onBack, alwaysShowBackButton, onCloseSuccess }: ConversationChatPanelProps): React.JSX.Element;
+export declare function ConversationChatPanel({ conversation, onToggleContextPanel, isContextPanelOpen, onBack, alwaysShowBackButton, onCloseSuccess, showHeader, showWallpaper, readOnly, readOnlyMessage, showComposer }: ConversationChatPanelProps): React.JSX.Element;
