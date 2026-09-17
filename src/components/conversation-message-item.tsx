@@ -67,8 +67,8 @@ export function ConversationMessageItem({
           className={cn(
             'rounded-2xl px-3.5 py-2.5 shadow-xs text-xs sm:text-sm leading-relaxed break-words',
             isOwnMessage
-              ? 'rounded-tr-xs bg-blue-600 text-white'
-              : 'rounded-tl-xs bg-neutral-100 dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border border-neutral-200/60 dark:border-neutral-700/60'
+              ? 'rounded-tr-xs bg-blue-600 text-white shadow-xs'
+              : 'rounded-tl-xs bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 border border-neutral-200/80 dark:border-neutral-700/60 shadow-xs'
           )}
         >
           {attachments.map((attachment: MessageAttachment) => {
