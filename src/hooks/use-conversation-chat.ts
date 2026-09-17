@@ -1,0 +1,512 @@
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { InfiniteData, useQueryClient } from '@tanstack/react-query'
+import type { Conversation, TypingEvent } from '../types/conversation.types'
+import type { ConversationMessage, Message, MessageParams } from '../types/message.types'
+import type { ResponseApiMessage } from '../types/api.types'
+import type { AxiosResponse } from 'axios'
+import { getConversationName } from '../utils/conversation.util'
+import { createOptimisticMessage, mergeOlderGroups, prependMessage } from '../utils/message.util'
+import useListMessages from './api/messages/use-list-messages'
+import useSendMessage from './api/messages/use-send-message'
+import useUploadMessageFile from './api/messages/use-upload-message-file'
+import useMarkConversationAsRead from './api/conversations/use-mark-conversation-as-read'
+import useUpdateConversationTyping from './api/conversations/use-update-conversation-typing'
+import useCloseConversation from './api/conversations/use-close-conversation'
+import { toast } from 'sonner'
+import { subscribeToConversation } from '../utils/reverb'
+import { useChatContext } from '../context/chat-context'
+
+export const useConversationChat = (conversation: Conversation) => {
+  const queryClient = useQueryClient()
+  const { config, currentUser, currentUserId } = useChatContext()
+
+  const params = useMemo<MessageParams>(
+    () => ({ conversation: conversation.id, page: { size: '20' } }),
+    [conversation.id]
+  )
+
+  const {
+    data: messages,
+    refetch: refetchMessages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading
+  } = useListMessages({
+    params,
+    enabled: Boolean(conversation.id)
+  })
+  const { mutateAsync: sendMessage, isLoading: isSending } = useSendMessage()
+  const { mutateAsync: uploadMessageFile, isLoading: isUploading } = useUploadMessageFile()
+  const { mutateAsync: markConversationAsRead } = useMarkConversationAsRead()
+  const { mutate: updateConversationTyping } = useUpdateConversationTyping()
+  const { mutateAsync: closeConversation, isLoading: isClosing } = useCloseConversation()
+
+  const [inputText, setInputText] = useState('')
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
+  const isClosed = Boolean(conversation.attributes.closed_at)
+  const [optimisticMessages, setOptimisticMessages] = useState<Message[]>([])
+  const [isNearBottom, setIsNearBottom] = useState(true)
+  const [newMessagesCount, setNewMessagesCount] = useState(0)
+  const [visibleDate, setVisibleDate] = useState('Hoy')
+  const [typingUser, setTypingUser] = useState<string | null>(null)
+
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const isInitialScrollDoneRef = useRef(false)
+  const isAutoScrollingRef = useRef(false)
+  const previousScrollHeightRef = useRef(0)
+  const previousScrollTopRef = useRef(0)
+  const isFetchingNextPageRef = useRef(false)
+  const hasNextPageRef = useRef(hasNextPage)
+  const previousConversationIdRef = useRef(conversation.id)
+
+  const markReadTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const outgoingTypingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isTypingRef = useRef(false)
+  const updateConversationTypingRef = useRef(updateConversationTyping)
+  const conversationName = getConversationName(conversation, currentUserId)
+
+  useEffect(() => {
+    updateConversationTypingRef.current = updateConversationTyping
+  }, [updateConversationTyping])
+
+  useEffect(() => {
+    isFetchingNextPageRef.current = isFetchingNextPage
+  }, [isFetchingNextPage])
+
+  useEffect(() => {
+    hasNextPageRef.current = hasNextPage
+  }, [hasNextPage])
+
+  const scrollToBottom = useCallback(() => {
+    const container = scrollRef.current
+    if (!container) return
+
+    container.scrollTo({
+      top: container.scrollHeight,
+      behavior: 'smooth'
+    })
+    setNewMessagesCount(0)
+    setIsNearBottom(true)
+  }, [])
+
+  const updateScrollIndicators = useCallback(() => {
+    const container = scrollRef.current
+    if (!container) return
+
+    const scrollBottomOffset =
+      container.scrollHeight - container.scrollTop - container.clientHeight
+    const nearBottom = scrollBottomOffset < 140
+
+    setIsNearBottom(nearBottom)
+    if (nearBottom) {
+      setNewMessagesCount(0)
+      setVisibleDate('Hoy')
+      return
+    }
+
+    const dateElements = container.querySelectorAll<HTMLElement>('[data-date-group]')
+    if (dateElements.length === 0) {
+      setVisibleDate('Hoy')
+      return
+    }
+
+    const containerTop = container.scrollTop
+    let foundDate = ''
+
+    for (let i = 0; i < dateElements.length; i++) {
+      const el = dateElements[i]
+      if (el.offsetTop + el.offsetHeight >= containerTop + 30) {
+        foundDate = el.getAttribute('data-date-group') || ''
+        break
+      }
+    }
+
+    setVisibleDate(foundDate || 'Hoy')
+  }, [])
+
+  // Reiniciar estados de scroll y mensajes optimistas al cambiar de conversación
+  useEffect(() => {
+    if (previousConversationIdRef.current !== conversation.id) {
+      previousConversationIdRef.current = conversation.id
+      isInitialScrollDoneRef.current = false
+      isAutoScrollingRef.current = false
+      previousScrollHeightRef.current = 0
+      previousScrollTopRef.current = 0
+      setOptimisticMessages([])
+      setIsNearBottom(true)
+      setNewMessagesCount(0)
+      setVisibleDate('Hoy')
+    }
+  }, [conversation.id])
+
+  // Posicionamiento inicial directo al fondo
+  useEffect(() => {
+    if (isInitialScrollDoneRef.current) return
+    if (isLoading || messages.length === 0) return
+
+    const container = scrollRef.current
+    if (!container) return
+
+    container.scrollTop = container.scrollHeight
+    isInitialScrollDoneRef.current = true
+    setIsNearBottom(true)
+  }, [conversation.id, isLoading, messages.length])
+
+  // Scroll Anchoring: al cargar mensajes más antiguos arriba, preservar la posición visual
+  useLayoutEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+
+    if (previousScrollHeightRef.current > 0) {
+      const newScrollHeight = container.scrollHeight
+      const heightDiff = newScrollHeight - previousScrollHeightRef.current
+      if (heightDiff > 0) {
+        container.scrollTop = previousScrollTopRef.current + heightDiff
+      }
+      previousScrollHeightRef.current = 0
+      previousScrollTopRef.current = 0
+    }
+  }, [messages])
+
+  // Desplazamiento suave al fondo cuando el usuario envía un mensaje nuevo
+  useEffect(() => {
+    if (optimisticMessages.length > 0) {
+      const container = scrollRef.current
+      if (container) {
+        isAutoScrollingRef.current = true
+        container.scrollTo({
+          top: container.scrollHeight,
+          behavior: 'smooth'
+        })
+        const timer = setTimeout(() => {
+          isAutoScrollingRef.current = false
+        }, 500)
+        return () => clearTimeout(timer)
+      }
+    }
+  }, [optimisticMessages.length])
+
+  // Detector de scroll hacia arriba para solicitar páginas anteriores
+  useEffect(() => {
+    const container = scrollRef.current
+    if (!container) return
+
+    const handleScroll = () => {
+      updateScrollIndicators()
+
+      if (isAutoScrollingRef.current || !isInitialScrollDoneRef.current) {
+        return
+      }
+
+      if (
+        container.scrollTop < 80 &&
+        hasNextPageRef.current &&
+        !isFetchingNextPageRef.current &&
+        !isLoading
+      ) {
+        isFetchingNextPageRef.current = true
+        previousScrollHeightRef.current = container.scrollHeight
+        previousScrollTopRef.current = container.scrollTop
+
+        fetchNextPage()
+          .then((result) => {
+            if (!result?.hasNextPage) {
+              hasNextPageRef.current = false
+            }
+          })
+          .finally(() => {
+            isFetchingNextPageRef.current = false
+          })
+      }
+    }
+
+    container.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      container.removeEventListener('scroll', handleScroll)
+    }
+  }, [fetchNextPage, isLoading, updateScrollIndicators])
+
+  const scheduleMarkAsRead = useCallback(() => {
+    if (!conversation.id || !currentUserId) return
+
+    if (markReadTimerRef.current) {
+      clearTimeout(markReadTimerRef.current)
+    }
+
+    markReadTimerRef.current = setTimeout(() => {
+      markReadTimerRef.current = null
+      void markConversationAsRead({
+        conversationId: conversation.id,
+        read_until: new Date().toISOString(),
+        user_id: currentUserId
+      }).catch(console.error)
+    }, 600)
+  }, [conversation.id, currentUserId, markConversationAsRead])
+
+  useEffect(() => {
+    return () => {
+      if (markReadTimerRef.current) {
+        clearTimeout(markReadTimerRef.current)
+      }
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current)
+      }
+      if (outgoingTypingTimerRef.current) {
+        clearTimeout(outgoingTypingTimerRef.current)
+      }
+    }
+  }, [conversation.id])
+
+  const handleNewMessage = useCallback(
+    (message: Message) => {
+      queryClient.setQueryData<
+        InfiniteData<AxiosResponse<ResponseApiMessage<ConversationMessage[]>>>
+      >(['list-messages', params], (oldData) => {
+        if (!oldData?.pages || oldData.pages.length === 0) return oldData
+
+        const firstPage = oldData.pages[0]
+        const currentGroups = firstPage.data?.data ?? []
+        const updatedGroups = prependMessage(currentGroups, message)
+
+        return {
+          ...oldData,
+          pages: [
+            {
+              ...firstPage,
+              data: {
+                ...firstPage.data,
+                data: updatedGroups
+              }
+            },
+            ...oldData.pages.slice(1)
+          ]
+        }
+      })
+
+      const container = scrollRef.current
+      if (container) {
+        const isCurrentlyNearBottom =
+          container.scrollHeight - container.scrollTop - container.clientHeight < 160
+        if (isCurrentlyNearBottom) {
+          setTimeout(() => {
+            container.scrollTo({
+              top: container.scrollHeight,
+              behavior: 'smooth'
+            })
+          }, 50)
+        } else {
+          setNewMessagesCount((prev) => prev + 1)
+        }
+      }
+
+      scheduleMarkAsRead()
+    },
+    [params, queryClient, scheduleMarkAsRead]
+  )
+
+  const handleTyping = useCallback(
+    (event: TypingEvent) => {
+      if (String(event.user_id) === String(currentUserId)) return
+
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current)
+        typingTimerRef.current = null
+      }
+
+      if (!event.is_typing) {
+        setTypingUser(null)
+        return
+      }
+
+      setTypingUser(event.user.name)
+      typingTimerRef.current = setTimeout(() => {
+        typingTimerRef.current = null
+        setTypingUser(null)
+      }, 2000)
+    },
+    [currentUserId]
+  )
+
+  const sendTypingStatus = useCallback(
+    (isTyping: boolean) => {
+      if (!conversation.id || !currentUserId || isTypingRef.current === isTyping) {
+        return
+      }
+
+      isTypingRef.current = isTyping
+      updateConversationTypingRef.current({
+        conversationId: conversation.id,
+        user_id: Number(currentUserId),
+        is_typing: isTyping
+      })
+    },
+    [conversation.id, currentUserId]
+  )
+
+  const scheduleTypingStop = useCallback(() => {
+    if (outgoingTypingTimerRef.current) {
+      clearTimeout(outgoingTypingTimerRef.current)
+    }
+
+    outgoingTypingTimerRef.current = setTimeout(() => {
+      outgoingTypingTimerRef.current = null
+      sendTypingStatus(false)
+    }, 2500)
+  }, [sendTypingStatus])
+
+  const handleInputTextChange = useCallback(
+    (text: string) => {
+      setInputText(text)
+      if (!text.trim()) {
+        if (outgoingTypingTimerRef.current) {
+          clearTimeout(outgoingTypingTimerRef.current)
+          outgoingTypingTimerRef.current = null
+        }
+        sendTypingStatus(false)
+        return
+      }
+
+      sendTypingStatus(true)
+      scheduleTypingStop()
+    },
+    [scheduleTypingStop, sendTypingStatus]
+  )
+
+  useEffect(() => {
+    return () => {
+      if (outgoingTypingTimerRef.current) {
+        clearTimeout(outgoingTypingTimerRef.current)
+        outgoingTypingTimerRef.current = null
+      }
+      sendTypingStatus(false)
+    }
+  }, [conversation.id, sendTypingStatus])
+
+  const markConversationAsReadIfNeeded = () => {
+    if (!conversation.attributes.unread_count) return
+    scheduleMarkAsRead()
+  }
+
+  useEffect(() => {
+    markConversationAsReadIfNeeded()
+  }, [conversation, messages, scheduleMarkAsRead])
+
+  // Suscripción a eventos en tiempo real para la conversación
+  useEffect(() => {
+    if (!conversation.id) return
+    const unsubscribe = subscribeToConversation(
+      config.reverb,
+      Number(conversation.id),
+      handleNewMessage,
+      handleTyping
+    )
+
+    return () => {
+      unsubscribe()
+    }
+  }, [config.reverb, conversation.id, handleNewMessage, handleTyping])
+
+  const handleSendMessage = async () => {
+    const caption = inputText.trim()
+    if (!caption && !pendingFile) return
+    if (!currentUser) return
+
+    const file = pendingFile
+    const optimisticMessage = createOptimisticMessage({
+      conversationId: conversation.id,
+      sender: currentUser,
+      body: caption,
+      file
+    })
+    const optimisticId = optimisticMessage.id
+
+    setOptimisticMessages((current) => [...current, optimisticMessage])
+    setInputText('')
+    if (outgoingTypingTimerRef.current) {
+      clearTimeout(outgoingTypingTimerRef.current)
+      outgoingTypingTimerRef.current = null
+    }
+    sendTypingStatus(false)
+
+    try {
+      const message = file
+        ? await uploadMessageFile({
+            conversationId: conversation.id,
+            file,
+            sender_id: Number(currentUser.id),
+            caption: caption || undefined
+          })
+        : await sendMessage({
+            body: caption,
+            conversationId: conversation.id,
+            sender_id: currentUser.id
+          })
+
+      setPendingFile(null)
+      const refreshedMessages = await refetchMessages()
+      const allHistoryGroups =
+        refreshedMessages.data?.pages?.reduce<ConversationMessage[]>(
+          (acc, page) => mergeOlderGroups(acc, page.data?.data ?? []),
+          []
+        ) ?? []
+      const isConfirmed = allHistoryGroups.some((group) =>
+        group.messages.some((historyMessage) => historyMessage.id === message.id)
+      )
+
+      if (isConfirmed) {
+        setOptimisticMessages((current) => current.filter((item) => item.id !== optimisticId))
+      }
+
+      scheduleMarkAsRead()
+    } catch {
+      setOptimisticMessages((current) =>
+        current.map((item) =>
+          item.id === optimisticId ? { ...item, local_status: 'error' } : item
+        )
+      )
+    }
+  }
+
+  const handleCloseConversation = useCallback(async () => {
+    try {
+      await closeConversation(conversation.id)
+      toast.success('Conversación cerrada exitosamente')
+    } catch (err: any) {
+      const errorMsg =
+        err?.response?.data?.message || err?.message || 'Error al cerrar la conversación'
+      toast.error(errorMsg)
+    }
+  }, [closeConversation, conversation.id])
+
+  return {
+    messages,
+    optimisticMessages,
+    scrollRef,
+    conversationName,
+    inputText,
+    pendingFile,
+    isClosed,
+    isClosing,
+    isSending,
+    isUploading,
+    isFetchingNextPage,
+    hasNextPage,
+    isLoading,
+    isNearBottom,
+    newMessagesCount,
+    typingUser,
+    visibleDate,
+    currentUser,
+    currentUserId,
+    scrollToBottom,
+    setInputText: handleInputTextChange,
+    setPendingFile,
+    handleSendMessage,
+    handleSelectFile: setPendingFile,
+    handleCloseConversation
+  }
+}
+
+export default useConversationChat
