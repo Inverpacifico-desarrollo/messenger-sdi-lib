@@ -3,14 +3,49 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import dts from 'vite-plugin-dts'
 import { resolve } from 'path'
+import prefixer from 'postcss-prefix-selector'
 
 export default defineConfig(({ mode }) => {
   const isLibrary = mode === 'production' || process.env.BUILD_LIB === 'true'
 
   return {
     server: {
-      host:"127.0.0.1",
+      host: '127.0.0.1',
       port: 3001
+    },
+    css: {
+      postcss: {
+        plugins: [
+          prefixer({
+            prefix: '.sdi-messenger-root',
+            transform(prefix, selector, prefixedSelector, filePath, rule) {
+              if (
+                selector === ':root' ||
+                selector === 'html' ||
+                selector === 'body' ||
+                selector === ':host'
+              ) {
+                return prefix
+              }
+              if (
+                selector.startsWith(':root') ||
+                selector.startsWith('html') ||
+                selector.startsWith('body') ||
+                selector.startsWith(':host')
+              ) {
+                return selector.replace(/^(:root|html|body|:host)/, prefix)
+              }
+              if (selector.includes(prefix)) {
+                return selector
+              }
+              if (selector.startsWith('.')) {
+                return `${prefix}${selector}, ${prefix} ${selector}`
+              }
+              return `${prefix} ${selector}`
+            }
+          })
+        ]
+      }
     },
     plugins: [
       react(),

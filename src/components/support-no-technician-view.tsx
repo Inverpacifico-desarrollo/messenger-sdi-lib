@@ -33,7 +33,7 @@ export function SupportNoTechnicianView({
   const ticketDisplayNumber = ticket?.number ?? ticket?.id ?? 'N/A'
 
   return (
-    <div className='flex flex-col h-full w-full bg-white dark:bg-neutral-900 overflow-hidden'>
+    <div className='sdi-messenger-root flex flex-col h-full w-full bg-white dark:bg-neutral-900 overflow-hidden'>
       {/* Barra superior */}
       <div className='flex items-center justify-between border-b border-neutral-200 dark:border-neutral-800 px-4 py-3 bg-neutral-50/70 dark:bg-neutral-900'>
         <div className='flex items-center gap-2'>

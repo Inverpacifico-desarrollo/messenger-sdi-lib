@@ -48,13 +48,17 @@
 }
 
 @layer base {
-  :root {
+  .sdi-messenger-root,
+  [data-sdi-messenger-root] {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
     --border: 214.3 31.8% 91.4%;
   }
 
-  .dark {
+  .sdi-messenger-root.dark,
+  [data-sdi-messenger-root].dark,
+  :where(.dark, .dark *) .sdi-messenger-root,
+  :where(.dark, .dark *) [data-sdi-messenger-root] {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
@@ -80,10 +84,12 @@
   background: rgba(156, 163, 175, 0.7);
 }
 
-.dark .chat-scrollbar::-webkit-scrollbar-thumb {
+.dark .chat-scrollbar::-webkit-scrollbar-thumb,
+.sdi-messenger-root.dark .chat-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(156, 163, 175, 0.25);
 }
 
-.dark .chat-scrollbar::-webkit-scrollbar-thumb:hover {
+.dark .chat-scrollbar::-webkit-scrollbar-thumb:hover,
+.sdi-messenger-root.dark .chat-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.45);
 }

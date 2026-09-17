@@ -76,7 +76,7 @@ export function RequestSupportForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className='flex flex-col h-full w-full'>
+    <form onSubmit={handleSubmit} className='sdi-messenger-root flex flex-col h-full w-full'>
       <div className='flex-1 overflow-y-auto p-4 space-y-4 text-neutral-800 dark:text-neutral-100'>
         {/* Encabezado contextual */}
         <div className='rounded-xl border border-blue-100 dark:border-blue-950/60 bg-blue-50/70 dark:bg-blue-950/20 p-3 text-xs'>

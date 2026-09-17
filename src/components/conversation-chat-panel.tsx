@@ -25,7 +25,7 @@ export function ConversationChatPanel({
   const chat = useConversationChat(conversation)
 
   return (
-    <div className='flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'>
+    <div className='sdi-messenger-root flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'>
       {/* Cabecera del Chat Activo */}
       <ConversationChatHeader
         conversation={conversation}

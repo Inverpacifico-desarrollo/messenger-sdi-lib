@@ -69,7 +69,7 @@ export function AlertDialogContent({ className, children, ...props }: React.HTML
     <div
       ref={overlayRef}
       onClick={handleBackdropClick}
-      className='fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-150'
+      className='sdi-messenger-root fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs transition-opacity animate-in fade-in duration-150'
     >
       <div
         role='alertdialog'

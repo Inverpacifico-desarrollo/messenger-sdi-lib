@@ -260,7 +260,7 @@ export function FloatingChat({
           : undefined
       }
       className={cn(
-        'z-50 flex pointer-events-none select-none',
+        'sdi-messenger-root z-50 flex pointer-events-none select-none',
         isDragging
           ? 'fixed cursor-grabbing'
           : cn('fixed duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] transition-all', cornerContainerClass)

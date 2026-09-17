@@ -181,7 +181,7 @@ export function ConversationsSidebarList({
   const isListLoading = isLoading || isLoadingUser
 
   return (
-    <div className='flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'>
+    <div className='sdi-messenger-root flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'>
       {/* Cabecera de la Bandeja */}
       <div className='flex shrink-0 flex-col gap-2.5 border-b border-neutral-200 dark:border-neutral-800 p-3 bg-white dark:bg-neutral-900'>
         {/* Buscador */}
