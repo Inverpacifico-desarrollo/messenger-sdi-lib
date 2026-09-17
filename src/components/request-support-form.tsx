@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { RequestChatSupportPayload } from '../types/chat-support.types'
 
-interface RequestSupportFormProps {
+export interface RequestSupportFormProps {
   userId: number | string
   userName?: string
   onSubmit: (payload: RequestChatSupportPayload) => Promise<void> | void

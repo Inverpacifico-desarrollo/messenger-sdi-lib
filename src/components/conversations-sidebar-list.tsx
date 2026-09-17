@@ -27,7 +27,7 @@ import { useChatContext } from '../context/chat-context'
 import { useCheckHasPermissionMessenger } from '../hooks/use-check-has-permission-messenger'
 import { ConversationsUserFooter } from './conversations-user-footer'
 
-interface ConversationsSidebarListProps {
+export interface ConversationsSidebarListProps {
   conversations: Conversation[]
   selectedId: string
   onSelectConversation: (id: string) => void
@@ -39,6 +39,8 @@ interface ConversationsSidebarListProps {
   onTypeFilterChange: (val: 'all' | 'direct' | 'group' | 'bot') => void
   onNewConversation?: () => void
   isLoading?: boolean
+  error?: Error | null
+  onRetry?: () => void
 }
 
 const TYPE_OPTIONS = [

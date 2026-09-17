@@ -36,7 +36,7 @@ import { UserChat } from '../types/user-chat.types'
 import { capitalizeWords } from '../utils/conversation.util'
 import { useChatContext } from '../context/chat-context'
 
-interface NewConversationDialogProps {
+export interface NewConversationDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: (conversation: Conversation) => void

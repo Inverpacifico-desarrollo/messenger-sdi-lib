@@ -7,7 +7,7 @@ import { ConversationChatHeader } from './conversation-chat-header'
 import { ConversationMessagesList } from './conversation-messages-list'
 import { ConversationComposer } from './conversation-composer'
 
-interface ConversationChatPanelProps {
+export interface ConversationChatPanelProps {
   conversation: Conversation
   onToggleContextPanel?: () => void
   isContextPanelOpen?: boolean

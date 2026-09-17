@@ -71,6 +71,7 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
         output: {
+          banner: `'use client';\nif (typeof globalThis !== 'undefined' && typeof globalThis.self === 'undefined') {\n  globalThis.self = globalThis;\n}\n`,
           globals: {
             react: 'React',
             'react-dom': 'ReactDOM'

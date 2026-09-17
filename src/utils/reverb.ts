@@ -7,7 +7,11 @@ import type { ChatConfig } from "../context/chat-context";
 let pusher: Pusher | null = null;
 let pusherConfigKey: string | null = null;
 
-export function getPusher(reverbConfig: ChatConfig['reverb']): Pusher {
+export function getPusher(reverbConfig: ChatConfig['reverb']): Pusher | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
   const configKey = JSON.stringify(reverbConfig)
 
   if (pusher && pusherConfigKey !== configKey) {
@@ -39,7 +43,13 @@ export function subscribeToConversation(
   onMessage: (message: Message) => void,
   onTyping?: (event: TypingEvent) => void
 ) {
+  if (typeof window === 'undefined') {
+    return () => {};
+  }
+
   const pusher = getPusher(reverbConfig);
+  if (!pusher) return () => {};
+
   const channel = pusher.subscribe(`conversation.${conversationId}`);
 
   channel.bind("MessageSent", (data: Record<string, unknown>) => {
@@ -64,7 +74,13 @@ export function subscribeToUser(
   onUnread: (event: UnreadEvent) => void,
   onConversationCreated?: (data?: unknown) => void
 ) {
+  if (typeof window === 'undefined') {
+    return () => {};
+  }
+
   const pusher = getPusher(reverbConfig);
+  if (!pusher) return () => {};
+
   const channel = pusher.subscribe(`user.${userId}`);
 
   channel.bind("ConversationUnreadUpdated", (data: UnreadEvent) => {
@@ -88,3 +104,4 @@ export function subscribeToUser(
     pusher.unsubscribe(`user.${userId}`);
   };
 }
+

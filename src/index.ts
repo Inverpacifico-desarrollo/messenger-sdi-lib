@@ -1,69 +1,67 @@
 import './styles/index.css'
 
-// Components
-export * from './components/floating-chat'
-export * from './components/conversation-chat-panel'
-export * from './components/conversation-chat-header'
-export * from './components/conversation-messages-list'
-export * from './components/conversation-message-item'
-export * from './components/conversation-composer'
-export * from './components/conversations-sidebar-list'
-export * from './components/conversation-context-panel'
-export * from './components/conversation-empty-state'
-export * from './components/btn-close-conversation'
-export * from './components/new-conversation-dialog'
-export * from './components/conversations-user-footer'
-export * from './components/request-support-form'
-export * from './components/support-no-technician-view'
+// 1. Context & Provider
+export {
+  ChatProvider,
+  useChatContext,
+  useOptionalChatContext,
+  type ChatConfig,
+  type ChatContextValue,
+  type ChatProviderProps
+} from './context/chat-context'
 
-// UI Primitives
-export * from './ui'
+// 2. Componentes Principales
+export {
+  FloatingChat,
+  type FloatingChatProps,
+  type FloatingChatView,
+  type FloatingChatCorner
+} from './components/floating-chat'
 
-// Context & Provider
-export * from './context/chat-context'
+export {
+  ConversationChatPanel,
+  type ConversationChatPanelProps
+} from './components/conversation-chat-panel'
 
-// Types
-export * from './types/conversation.types'
-export * from './types/message.types'
-export * from './types/user-chat.types'
-export * from './types/user-auth.types'
-export * from './types/api.types'
-export * from './types/chat-support.types'
-export * from './types/permission.types'
+export { ConversationEmptyState } from './components/conversation-empty-state'
+export { ConversationContextPanel } from './components/conversation-context-panel'
 
-// Services
-export * from './services/user-auth.services'
-export * from './services/user-messenger.services'
-export * from './services/chat-support.services'
-export * from './services/conversation.services'
-export * from './services/message.services'
-export * from './services/auth-services'
+export {
+  ConversationsSidebarList,
+  type ConversationsSidebarListProps
+} from './components/conversations-sidebar-list'
 
-// HTTP & Query Client
-export * from './lib/http-request'
-export * from './lib/react-query'
+export {
+  NewConversationDialog,
+  type NewConversationDialogProps
+} from './components/new-conversation-dialog'
 
-// Hooks
-export * from './hooks/use-check-has-permission-messenger'
-export * from './hooks/use-debounce'
-export * from './hooks/use-mutate'
+export { RequestSupportForm, type RequestSupportFormProps } from './components/request-support-form'
+
+// 3. Hooks Principales (para vistas embebidas personalizadas)
 export { default as useConversationsPage } from './hooks/use-conversations-page'
 export { default as useConversationChat } from './hooks/use-conversation-chat'
-export { default as useGetAuthUser } from './hooks/api/users/use-get-auth-user'
-export { default as useListUsers } from './hooks/api/users/use-list-users'
-export { default as useRequestChatSupport } from './hooks/api/use-request-chat-support'
-export { default as useListConversations } from './hooks/api/conversations/use-list-conversations'
-export { default as useGetConversation } from './hooks/api/conversations/use-get-conversation'
-export { default as useCreateConversation } from './hooks/api/conversations/use-create-conversation'
-export { default as useCloseConversation } from './hooks/api/conversations/use-close-conversation'
-export { default as useMarkConversationAsRead } from './hooks/api/conversations/use-mark-conversation-as-read'
-export { default as useUpdateConversationTyping } from './hooks/api/conversations/use-update-conversation-typing'
-export { default as useListMessages } from './hooks/api/messages/use-list-messages'
-export { default as useSendMessage } from './hooks/api/messages/use-send-message'
-export { default as useUploadMessageFile } from './hooks/api/messages/use-upload-message-file'
 
-// Utils
-export { subscribeToConversation, subscribeToUser, getPusher } from './utils/reverb'
-export { capitalizeWords, getConversationName, getConversationUser, isGroupConversation, mockGetUserLogged } from './utils/conversation.util'
-export * from './utils/message.util'
-export * from './utils/normalizers'
+// 4. Tipos de Dominio Esenciales
+export type {
+  Conversation,
+  ConversationType,
+  CreateConversationPayload,
+  TypingEvent,
+  UnreadEvent
+} from './types/conversation.types'
+
+export type {
+  Message,
+  MessageAttachment,
+  MessageType,
+  CreateMessagePayload,
+  UploadMessageFilePayload
+} from './types/message.types'
+
+export type { UserChat } from './types/user-chat.types'
+
+export type {
+  RequestChatSupportPayload,
+  RequestChatSupportResponse
+} from './types/chat-support.types'
