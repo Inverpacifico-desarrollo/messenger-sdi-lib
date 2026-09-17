@@ -16,7 +16,14 @@ import { toast } from 'sonner'
 import { subscribeToConversation } from '../utils/reverb'
 import { useChatContext } from '../context/chat-context'
 
-export const useConversationChat = (conversation: Conversation) => {
+export interface UseConversationChatOptions {
+  onCloseSuccess?: () => void
+}
+
+export const useConversationChat = (
+  conversation: Conversation,
+  options?: UseConversationChatOptions
+) => {
   const queryClient = useQueryClient()
   const { config, currentUser, currentUserId } = useChatContext()
 
@@ -358,6 +365,7 @@ export const useConversationChat = (conversation: Conversation) => {
 
   const handleInputTextChange = useCallback(
     (text: string) => {
+      if (isClosed) return
       setInputText(text)
       if (!text.trim()) {
         if (outgoingTypingTimerRef.current) {
@@ -371,7 +379,7 @@ export const useConversationChat = (conversation: Conversation) => {
       sendTypingStatus(true)
       scheduleTypingStop()
     },
-    [scheduleTypingStop, sendTypingStatus]
+    [isClosed, scheduleTypingStop, sendTypingStatus]
   )
 
   useEffect(() => {
@@ -408,7 +416,16 @@ export const useConversationChat = (conversation: Conversation) => {
     }
   }, [config.reverb, conversation.id, handleNewMessage, handleTyping])
 
+  const handleSelectFile = useCallback(
+    (file: File) => {
+      if (isClosed) return
+      setPendingFile(file)
+    },
+    [isClosed]
+  )
+
   const handleSendMessage = async () => {
+    if (isClosed) return
     const caption = inputText.trim()
     if (!caption && !pendingFile) return
     if (!currentUser) return
@@ -473,12 +490,13 @@ export const useConversationChat = (conversation: Conversation) => {
     try {
       await closeConversation(conversation.id)
       toast.success('Conversación cerrada exitosamente')
+      options?.onCloseSuccess?.()
     } catch (err: any) {
       const errorMsg =
         err?.response?.data?.message || err?.message || 'Error al cerrar la conversación'
       toast.error(errorMsg)
     }
-  }, [closeConversation, conversation.id])
+  }, [closeConversation, conversation.id, options])
 
   return {
     messages,
@@ -504,7 +522,7 @@ export const useConversationChat = (conversation: Conversation) => {
     setInputText: handleInputTextChange,
     setPendingFile,
     handleSendMessage,
-    handleSelectFile: setPendingFile,
+    handleSelectFile,
     handleCloseConversation
   }
 }

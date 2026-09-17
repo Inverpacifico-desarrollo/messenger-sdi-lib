@@ -1,12 +1,28 @@
 # SDI Messenger Library (`messenger-sdi-lib`)
 
-Librería de componentes React para mensajería y chat de soporte en tiempo real (con soporte para Laravel Reverb / Pusher WebSockets), diseñada con Tailwind CSS encapsulado para evitar colisiones en proyectos anfitriones.
+Librería de componentes React para mensajería y chat de soporte en tiempo real (con soporte para Laravel Reverb / Pusher WebSockets), diseñada para funcionar de forma transparente y aislada en cualquier proyecto **React / Next.js (App Router & Pages)**.
+
+---
+
+## ✨ Características Principales
+
+- **⚡ Cero Configuración Extra:** Maneja su propio `QueryClientProvider` internamente de forma 100% aislada. No requiere que configures TanStack React Query en tu proyecto anfitrión.
+- **🛡️ Compatibilidad SSR / Next.js:** Incluye directivas `'use client'` y polyfills seguros para evaluación en servidor durante Server-Side Rendering (SSR).
+- **🎨 Aislamiento de Estilos Garantizado:** Todos los estilos CSS están encapsulados bajo `.sdi-messenger-root` con Tailwind CSS v4, evitando colisiones con los estilos o clases globales de tu app.
+- **🗺️ Detección de Rutas en Tiempo Real:** Detección instantánea de cambios de URL en SPAs (Next.js `<Link>`, `router.push`, React Router) para ocultar o mostrar el chat flotante dinámicamente sin recargar la página.
+- **🔒 Bloqueo en Conversaciones Cerradas:** Deshabilita el compositor de texto/archivos con aviso de candado al interactuar con conversaciones finalizadas y regresa limpiamente a la lista al cerrarlas.
+- **💬 Vistas Flexibles:** Widget flotante (FAB) o componentes independientes para crear vistas a pantalla completa / paneles laterales.
 
 ---
 
 ## 📦 Instalación
 
-### Opción A: Desde registro NPM (si está publicado)
+### Opción A: Desde archivo empaquetado local (`.tgz`)
+```bash
+npm install ./ruta/a/messenger-sdi-lib-1.0.0.tgz
+```
+
+### Opción B: Desde registro NPM (si está publicado)
 ```bash
 npm install messenger-sdi-lib
 # o con pnpm / yarn
@@ -14,16 +30,11 @@ pnpm add messenger-sdi-lib
 yarn add messenger-sdi-lib
 ```
 
-### Opción B: Desde archivo empaquetado local (`.tgz`)
-```bash
-npm install ./ruta/a/messenger-sdi-lib-1.0.0.tgz
-```
-
 ---
 
 ## 🚀 Requisitos Previos
 
-La librería requiere **React 18+** y **React DOM 18+** en el proyecto anfitrión:
+La librería requiere **React 18+** y **React DOM 18+** como dependencias pares (`peerDependencies`):
 
 ```json
 "peerDependencies": {
@@ -36,22 +47,21 @@ La librería requiere **React 18+** y **React DOM 18+** en el proyecto anfitrió
 
 ## 🎨 1. Importación de Estilos
 
-Debes importar la hoja de estilos de la librería una sola vez en el archivo raíz de tu aplicación (ej. `main.tsx`, `App.tsx`, o `_app.tsx` / `layout.tsx` en Next.js):
+Importa la hoja de estilos de la librería una sola vez en el archivo raíz de tu aplicación (ej. `layout.tsx`, `_app.tsx`, `App.tsx` o `main.tsx`):
 
 ```tsx
 import 'messenger-sdi-lib/styles.css'
 ```
 
-> **🛡️ Aislamiento de Estilos Garantizado:**  
-> Todos los estilos de la librería están encapsulados bajo el prefijo `.sdi-messenger-root`. No afectarán los estilos de tu aplicación ni interferirán con tu propia configuración de Tailwind CSS o CSS Modules.
-
 ---
 
 ## ⚙️ 2. Configuración con `ChatProvider`
 
-Envuelve tu aplicación o sección de chat con el `ChatProvider`, pasando las credenciales de API y WebSockets (Reverb):
+Envuelve tu aplicación o layout con el `ChatProvider`, pasando las credenciales de API y WebSockets (Laravel Reverb):
 
 ```tsx
+'use client'
+
 import React from 'react'
 import { ChatProvider, FloatingChat, type ChatConfig } from 'messenger-sdi-lib'
 import 'messenger-sdi-lib/styles.css'
@@ -69,10 +79,10 @@ const chatConfig: ChatConfig = {
   }
 }
 
-export default function App() {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <ChatProvider config={chatConfig}>
-      {/* Tu aplicación */}
+      {children}
       <FloatingChat />
     </ChatProvider>
   )
@@ -84,52 +94,57 @@ export default function App() {
 ## 💬 3. Modos de Uso
 
 ### A. Widget Flotante (`<FloatingChat />`)
-El widget de chat flotante incluye botón interactivo, lista de conversaciones, panel de chat y soporte a tickets en tiempo real:
+Widget interactivo completo con botón flotante (FAB), lista de chats, soporte técnico y panel de conversación en tiempo real:
 
 ```tsx
 import { FloatingChat } from 'messenger-sdi-lib'
 
 <FloatingChat
   title="Centro de Ayuda SDI"
-  defaultView="home"               // 'home' | 'list' | 'chat' | 'form'
-  defaultCorner="bottom-right"      // 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
+  defaultView="home"                    // 'home' | 'list' | 'chat' | 'support-form'
+  defaultCorner="bottom-right"           // 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
   canViewChatList={true}
   canRequestSupport={true}
-  hiddenPaths={['/login', '/checkout']} // Ocultar automáticamente en ciertas rutas
+  hiddenPaths={['/messenger', '/login']} // Ocultar automáticamente en estas rutas
 />
 ```
 
-#### Propiedades Principales de `<FloatingChat />`:
+#### Propiedades de `<FloatingChat />`:
 
 | Propiedad | Tipo | Por Defecto | Descripción |
 | :--- | :--- | :--- | :--- |
-| `title` | `string` | `'Centro de Ayuda SDI'` | Título de la cabecera del widget. |
-| `defaultView` | `'home' \| 'list' \| 'chat' \| 'form'` | `'home'` | Vista inicial al abrir el chat. |
-| `defaultCorner` | `'bottom-right' \| 'bottom-left' \| 'top-right' \| 'top-left'` | `'bottom-right'` | Esquina inicial del botón flotante. |
-| `canViewChatList` | `boolean` | `true` | Habilita o restringe ver la lista de conversaciones. |
+| `title` | `string` | `'Centro de Ayuda SDI'` | Título en la cabecera del widget. |
+| `defaultView` | `'home' \| 'list' \| 'chat' \| 'support-form'` | `'home'` | Vista inicial al abrir el chat. |
+| `defaultCorner` | `'bottom-right' \| 'bottom-left' \| 'top-right' \| 'top-left'` | `'bottom-right'` | Esquina inicial en pantalla. |
+| `canViewChatList` | `boolean` | `true` | Permite navegar por la lista de conversaciones. |
 | `canRequestSupport` | `boolean` | `true` | Permite solicitar tickets de soporte técnico. |
-| `hiddenPaths` | `string[]` | Rutas de auth | Rutas de la URL donde el chat no debe mostrarse. |
+| `hiddenPaths` | `string[]` | `['/messenger']` | Rutas donde el chat se oculta automáticamente (ej: `['/messenger', '/admin/*']`). |
 | `showOnlyPaths` | `string[]` | `undefined` | Mostrar únicamente en las rutas especificadas. |
-| `hideCondition` | `() => boolean` | `undefined` | Callback booleano para ocultar dinámicamente. |
+| `hideCondition` | `(pathname: string) => boolean` | `undefined` | Callback booleano para evaluar dinámicamente si ocultar. |
+| `currentPath` | `string` | `undefined` | *(Opcional)* Ruta activa forzada (ej. desde `usePathname()`). |
+| `hidden` | `boolean` | `false` | Forzar ocultamiento mediante booleano directo. |
 
 ---
 
-### B. Vistas Embebidas (Pantalla Completa o Sidebar)
-Si deseas construir una página de mensajería dentro del layout de tu aplicación:
+### B. Vistas Embebidas (Pantalla Completa o Sección de Mensajería)
+Si deseas construir una página completa de mensajería dentro de tu aplicación:
 
 ```tsx
-import React, { useState } from 'react'
+'use client'
+
+import React from 'react'
 import {
   ConversationsSidebarList,
   ConversationChatPanel,
+  ConversationEmptyState,
   useConversationsPage
 } from 'messenger-sdi-lib'
 
-export function MessengerFullPage() {
+export function FullMessengerPage() {
   const {
     conversations,
-    activeConversation,
-    activeConversationId,
+    selectedId,
+    selectedConversation,
     selectConversation,
     searchQuery,
     setSearchQuery,
@@ -141,12 +156,12 @@ export function MessengerFullPage() {
   } = useConversationsPage()
 
   return (
-    <div className="flex h-[800px] w-full gap-4 p-4">
-      {/* Lista lateral */}
+    <div className="flex h-[calc(100vh-80px)] w-full gap-4 p-4">
+      {/* Lista Lateral de Conversaciones */}
       <div className="w-80 h-full">
         <ConversationsSidebarList
           conversations={conversations}
-          selectedId={activeConversationId || ''}
+          selectedId={selectedId}
           onSelectConversation={selectConversation}
           searchQuery={searchQuery}
           onSearchChange={setSearchQuery}
@@ -158,14 +173,12 @@ export function MessengerFullPage() {
         />
       </div>
 
-      {/* Panel de chat activo */}
+      {/* Panel de Conversación Activa */}
       <div className="flex-1 h-full">
-        {activeConversation ? (
-          <ConversationChatPanel conversation={activeConversation} />
+        {selectedConversation ? (
+          <ConversationChatPanel conversation={selectedConversation} />
         ) : (
-          <div className="flex h-full items-center justify-center border rounded-2xl">
-            <p className="text-sm text-neutral-400">Selecciona una conversación</p>
-          </div>
+          <ConversationEmptyState />
         )}
       </div>
     </div>
@@ -175,11 +188,30 @@ export function MessengerFullPage() {
 
 ---
 
+## 🎛️ Componentes y Hooks Disponibles
+
+### Componentes Exportados:
+- `ChatProvider`: Proveedor de contexto y cliente de consultas.
+- `FloatingChat`: Widget de chat flotante completo.
+- `ConversationChatPanel`: Panel activo de mensajes, cabecera y compositor.
+- `ConversationsSidebarList`: Lista lateral filtrable con pestañas y buscador.
+- `ConversationEmptyState`: Vista de estado vacío cuando no hay chat seleccionado.
+- `ConversationContextPanel`: Panel lateral con detalles y participantes.
+- `NewConversationDialog`: Modal para iniciar conversaciones directas o grupales.
+- `RequestSupportForm`: Formulario para crear solicitudes de asistencia técnica.
+
+### Hooks Exportados:
+- `useConversationsPage`: Gestiona estado de lista, filtros, búsqueda y selección.
+- `useConversationChat`: Gestiona mensajes, paginación, typing, archivos y cierre de conversación.
+- `useChatContext`: Acceso a la configuración activa y usuario autenticado.
+
+---
+
 ## 🌓 4. Modo Oscuro (Dark Mode)
 
 La librería detecta el modo oscuro automáticamente:
 1. Si el elemento `<html>` o `<body>` de tu app tiene la clase `dark`.
-2. O si agregas la clase `dark` a un elemento contenedor.
+2. O si agregas la clase `dark` a cualquier elemento contenedor del chat.
 
 ---
 

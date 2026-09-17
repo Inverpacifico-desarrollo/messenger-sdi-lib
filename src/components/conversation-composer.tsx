@@ -2,7 +2,7 @@
 
 import React, { useEffect, useLayoutEffect, useMemo, useRef } from 'react'
 import { Button, Textarea } from '../ui'
-import { Send, Paperclip, X, SendHorizontal } from 'lucide-react'
+import { Send, Paperclip, X, SendHorizontal, Lock } from 'lucide-react'
 
 interface ConversationComposerProps {
   inputText: string
@@ -14,6 +14,7 @@ interface ConversationComposerProps {
   isSending: boolean
   isUploading: boolean
   conversationName: string
+  isClosed?: boolean
 }
 
 export function ConversationComposer({
@@ -25,7 +26,8 @@ export function ConversationComposer({
   onRemoveFile,
   isSending,
   isUploading,
-  conversationName
+  conversationName,
+  isClosed = false
 }: ConversationComposerProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const maxTextareaHeight = 120
@@ -53,6 +55,17 @@ export function ConversationComposer({
     textarea.style.height = `${nextHeight}px`
     textarea.style.overflowY = textarea.scrollHeight > maxTextareaHeight ? 'auto' : 'hidden'
   }, [inputText])
+
+  if (isClosed) {
+    return (
+      <div className='shrink-0 border-t border-neutral-200/80 bg-neutral-50/90 p-3 text-center dark:border-neutral-800 dark:bg-neutral-950/80'>
+        <div className='flex items-center justify-center gap-2 rounded-xl border border-neutral-200/60 bg-white/70 px-4 py-2 text-xs font-medium text-neutral-500 shadow-2xs dark:border-neutral-800/80 dark:bg-neutral-900/60 dark:text-neutral-400'>
+          <Lock className='size-3.5 text-neutral-400 dark:text-neutral-500 shrink-0' />
+          <span>Esta conversación ha sido finalizada y no admite nuevos mensajes.</span>
+        </div>
+      </div>
+    )
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {

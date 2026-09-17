@@ -13,6 +13,7 @@ export interface ConversationChatPanelProps {
   isContextPanelOpen?: boolean
   onBack?: () => void
   alwaysShowBackButton?: boolean
+  onCloseSuccess?: () => void
 }
 
 export function ConversationChatPanel({
@@ -20,9 +21,15 @@ export function ConversationChatPanel({
   onToggleContextPanel,
   isContextPanelOpen = true,
   onBack,
-  alwaysShowBackButton = false
+  alwaysShowBackButton = false,
+  onCloseSuccess
 }: ConversationChatPanelProps) {
-  const chat = useConversationChat(conversation)
+  const chat = useConversationChat(conversation, {
+    onCloseSuccess: () => {
+      onCloseSuccess?.()
+      onBack?.()
+    }
+  })
 
   return (
     <div className='sdi-messenger-root flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'>
@@ -76,6 +83,7 @@ export function ConversationChatPanel({
         isSending={chat.isSending}
         isUploading={chat.isUploading}
         conversationName={chat.conversationName}
+        isClosed={chat.isClosed}
       />
     </div>
   )

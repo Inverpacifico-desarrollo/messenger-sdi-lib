@@ -6,18 +6,51 @@ export const DEFAULT_HIDDEN_PATHS = ['/messenger']
 
 export function isPathMatch(currentPath: string, pattern: string): boolean {
   if (!currentPath || !pattern) return false
-  const cleanCurrent = currentPath.toLowerCase()
-  const cleanPattern = pattern.toLowerCase().trim()
+  const cleanCurrent = (currentPath.startsWith('/') ? currentPath : `/${currentPath}`)
+    .toLowerCase()
+    .replace(/\/+$/, '') || '/'
+
+  const cleanPattern = (pattern.startsWith('/') ? pattern : `/${pattern}`)
+    .toLowerCase()
+    .trim()
 
   if (cleanPattern.endsWith('/*')) {
-    const prefix = cleanPattern.slice(0, -2)
-    return cleanCurrent === prefix || cleanCurrent.startsWith(prefix + '/')
+    const prefix = cleanPattern.slice(0, -2).replace(/\/+$/, '') || '/'
+    return cleanCurrent === prefix || cleanCurrent.startsWith(prefix === '/' ? '/' : `${prefix}/`)
   }
+
   if (cleanPattern.endsWith('*')) {
-    const prefix = cleanPattern.slice(0, -1)
-    return cleanCurrent.startsWith(prefix)
+    const prefix = cleanPattern.slice(0, -1).replace(/\/+$/, '') || '/'
+    return cleanCurrent === prefix || cleanCurrent.startsWith(prefix)
   }
-  return cleanCurrent === cleanPattern || cleanCurrent.startsWith(cleanPattern + '/')
+
+  const normalizedPattern = cleanPattern.replace(/\/+$/, '') || '/'
+  return cleanCurrent === normalizedPattern || cleanCurrent.startsWith(`${normalizedPattern}/`)
+}
+
+// Inyección única para interceptar cambios de ruta SPA generados por pushState/replaceState (Next.js, React Router, etc.)
+if (typeof window !== 'undefined') {
+  const customWindow = window as Window & { __sdi_messenger_history_patched__?: boolean }
+
+  if (!customWindow.__sdi_messenger_history_patched__) {
+    customWindow.__sdi_messenger_history_patched__ = true
+
+    const originalPushState = window.history.pushState
+    window.history.pushState = function (...args) {
+      const result = originalPushState.apply(this, args)
+      window.dispatchEvent(new Event('pushstate'))
+      window.dispatchEvent(new Event('locationchange'))
+      return result
+    }
+
+    const originalReplaceState = window.history.replaceState
+    window.history.replaceState = function (...args) {
+      const result = originalReplaceState.apply(this, args)
+      window.dispatchEvent(new Event('replacestate'))
+      window.dispatchEvent(new Event('locationchange'))
+      return result
+    }
+  }
 }
 
 interface UseFloatingChatVisibilityProps {
@@ -36,7 +69,7 @@ export function useFloatingChatVisibility({
   currentPath
 }: UseFloatingChatVisibilityProps) {
   const [pathname, setPathname] = useState<string>(() => {
-    if (currentPath) return currentPath
+    if (currentPath !== undefined) return currentPath
     return typeof window !== 'undefined' ? window.location.pathname : ''
   })
 
@@ -48,13 +81,29 @@ export function useFloatingChatVisibility({
 
     if (typeof window === 'undefined') return
 
-    const handleLocationChange = () => {
-      setPathname(window.location.pathname)
+    const updatePath = () => {
+      const activePath = window.location.pathname
+      setPathname((prev) => (prev !== activePath ? activePath : prev))
     }
 
-    window.addEventListener('popstate', handleLocationChange)
+    // Actualización inmediata
+    updatePath()
+
+    // Escuchamos eventos nativos y sintéticos de navegación SPA
+    window.addEventListener('popstate', updatePath)
+    window.addEventListener('pushstate', updatePath)
+    window.addEventListener('replacestate', updatePath)
+    window.addEventListener('locationchange', updatePath)
+
+    // Polling ligero (150ms) para garantizar detección en cualquier router o Server Action
+    const interval = window.setInterval(updatePath, 150)
+
     return () => {
-      window.removeEventListener('popstate', handleLocationChange)
+      window.removeEventListener('popstate', updatePath)
+      window.removeEventListener('pushstate', updatePath)
+      window.removeEventListener('replacestate', updatePath)
+      window.removeEventListener('locationchange', updatePath)
+      window.clearInterval(interval)
     }
   }, [currentPath])
 
@@ -81,3 +130,4 @@ export function useFloatingChatVisibility({
 
   return { shouldHide, pathname }
 }
+

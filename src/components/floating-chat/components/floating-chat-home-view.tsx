@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Headphones, MessagesSquare, ChevronRight, ShieldCheck, X } from 'lucide-react'
+import { LifeBuoy, MessagesSquare, ChevronRight, ShieldCheck, X } from 'lucide-react'
 import { Button } from '../../../ui'
 import { ConversationsUserFooter } from '../../conversations-user-footer'
 
@@ -40,7 +40,7 @@ export function FloatingChatHomeView({
         <div className='flex items-center justify-between'>
           <div className='flex items-center gap-2.5'>
             <div className='flex size-9 items-center justify-center rounded-xl bg-white/15 backdrop-blur-md'>
-              <Headphones className='size-5 text-white' />
+              <LifeBuoy className='size-5 text-white' />
             </div>
             <div>
               <h3 className='text-sm font-bold leading-none text-white'>{title}</h3>
@@ -80,7 +80,7 @@ export function FloatingChatHomeView({
           >
             <div className='flex items-center gap-3'>
               <div className='flex size-10 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 transition-colors group-hover:bg-blue-600 group-hover:text-white'>
-                <Headphones className='size-5' />
+                <LifeBuoy className='size-5' />
               </div>
               <div>
                 <h4 className='text-xs font-bold text-neutral-900 dark:text-neutral-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors'>

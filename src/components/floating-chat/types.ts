@@ -36,4 +36,10 @@ export interface FloatingChatProps {
    * Forzar ocultamiento mediante valor booleano directo.
    */
   hidden?: boolean
+  /**
+   * Ruta activa opcional.
+   * Si usas Next.js `usePathname()`, puedes suministrarla: `currentPath={pathname}`.
+   * Si se omite, se detectará automáticamente en tiempo real.
+   */
+  currentPath?: string
 }

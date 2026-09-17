@@ -102,6 +102,11 @@ export const useConversationsPage = () => {
     setIsMobileChatOpen(true)
   }
 
+  const unselectConversation = () => {
+    setSelectedId('')
+    setIsMobileChatOpen(false)
+  }
+
   const goBackToConversationList = () => setIsMobileChatOpen(false)
 
   const handleConversationCreated = (conversation: Conversation) => {
@@ -115,6 +120,7 @@ export const useConversationsPage = () => {
   return {
     conversations,
     selectedId,
+    setSelectedId,
     selectedConversation,
     closedFilter,
     setClosedFilter,
@@ -131,6 +137,7 @@ export const useConversationsPage = () => {
     currentUser,
     currentUserId,
     selectConversation,
+    unselectConversation,
     setIsContextPanelOpen,
     setIsNewConversationOpen,
     goBackToConversationList,

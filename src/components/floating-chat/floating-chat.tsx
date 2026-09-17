@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import { Card, cn } from '../../ui'
 import { toast } from 'sonner'
 import { ConversationChatPanel } from '../conversation-chat-panel'
@@ -36,7 +36,8 @@ export function FloatingChat({
   hiddenPaths = DEFAULT_HIDDEN_PATHS,
   showOnlyPaths,
   hideCondition,
-  hidden = false
+  hidden = false,
+  currentPath
 }: FloatingChatProps) {
   // Verificación de permisos de Messenger
   const hasReadChat = useCheckHasPermissionMessenger({
@@ -65,7 +66,8 @@ export function FloatingChat({
     hiddenPaths,
     showOnlyPaths,
     hideCondition,
-    hidden
+    hidden,
+    currentPath
   })
 
   // Hook de arrastre y fijación a esquinas
@@ -134,22 +136,17 @@ export function FloatingChat({
     customActiveConversation ||
     initialConversation ||
     selectedConversation ||
-    conversations[0] ||
-    ({
-      id: '1',
-      type: 'conversation',
-      attributes: {
-        is_group: false,
-        name: 'Soporte SDI',
-        closed_at: null,
-        unread_count: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      },
-      relationships: {
-        users: []
+    null
+
+  useEffect(() => {
+    if (currentView === 'chat' && !activeConversation) {
+      if (effectiveCanViewChatList) {
+        setCurrentView('list')
+      } else {
+        setCurrentView('home')
       }
-    } as Conversation)
+    }
+  }, [currentView, activeConversation, effectiveCanViewChatList])
 
   const handleToggleOpen = () => {
     if (wasDraggedRef.current || isDragging) return
@@ -358,13 +355,22 @@ export function FloatingChat({
               )}
 
               {/* VISTA 5: CHAT ACTIVO */}
-              {currentView === 'chat' && (
+              {currentView === 'chat' && activeConversation && (
                 <div className='flex h-full w-full flex-col min-w-0 overflow-hidden'>
                   <ConversationChatPanel
                     conversation={activeConversation}
                     isContextPanelOpen={false}
                     alwaysShowBackButton={true}
+                    onCloseSuccess={() => {
+                      setCustomActiveConversation(null)
+                      if (effectiveCanViewChatList) {
+                        setCurrentView('list')
+                      } else {
+                        setCurrentView('home')
+                      }
+                    }}
                     onBack={() => {
+                      setCustomActiveConversation(null)
                       if (effectiveCanViewChatList) {
                         setCurrentView('list')
                       } else {
