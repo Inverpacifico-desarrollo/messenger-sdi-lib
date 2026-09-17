@@ -15,6 +15,7 @@ export interface ConversationChatPanelProps {
   onBack?: () => void
   alwaysShowBackButton?: boolean
   onCloseSuccess?: () => void
+  showHeader?: boolean
 }
 
 export function ConversationChatPanel({
@@ -23,7 +24,8 @@ export function ConversationChatPanel({
   isContextPanelOpen = true,
   onBack,
   alwaysShowBackButton = false,
-  onCloseSuccess
+  onCloseSuccess,
+  showHeader = true
 }: ConversationChatPanelProps) {
   const chat = useConversationChat(conversation, {
     onCloseSuccess: () => {
@@ -35,16 +37,18 @@ export function ConversationChatPanel({
   return (
     <div className='sdi-messenger-root flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'>
       {/* Cabecera del Chat Activo */}
-      <ConversationChatHeader
-        conversation={conversation}
-        isClosed={chat.isClosed}
-        isClosing={chat.isClosing}
-        onCloseConversation={chat.handleCloseConversation}
-        isContextPanelOpen={isContextPanelOpen}
-        onToggleContextPanel={onToggleContextPanel}
-        onBack={onBack}
-        alwaysShowBackButton={alwaysShowBackButton}
-      />
+      {showHeader && (
+        <ConversationChatHeader
+          conversation={conversation}
+          isClosed={chat.isClosed}
+          isClosing={chat.isClosing}
+          onCloseConversation={chat.handleCloseConversation}
+          isContextPanelOpen={isContextPanelOpen}
+          onToggleContextPanel={onToggleContextPanel}
+          onBack={onBack}
+          alwaysShowBackButton={alwaysShowBackButton}
+        />
+      )}
 
       {/* Cuerpo del Chat con Wallpaper continuo (Mensajes + Typing + Composer flotante) */}
       <div className='relative flex flex-1 min-h-0 w-full flex-col overflow-hidden bg-[#f4f6f8]/70 dark:bg-[#0a0f1d]'>
