@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { AlertTriangle, Loader2, MessageCircle, X } from 'lucide-react'
+import { AlertTriangle, Loader2, MessageCircle, MessageCircleMore, MessagesCircle, X } from 'lucide-react'
 import { cn } from '../../../ui'
 
 interface FloatingChatButtonProps {
@@ -73,7 +73,7 @@ export function FloatingChatButton({
           </div>
         ) : (
           <div className='relative flex items-center justify-center'>
-            <MessageCircle className='size-6 transition-transform duration-200' />
+            <MessageCircleMore className='size-6 transition-transform duration-200' />
           </div>
         )}
       </button>
