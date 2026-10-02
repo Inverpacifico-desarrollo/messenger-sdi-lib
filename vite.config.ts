@@ -84,7 +84,20 @@ export default defineConfig(({ mode }) => {
         fileName: (format) => `index.${format === 'es' ? 'js' : 'cjs'}`
       },
       rollupOptions: {
-        external: ['react', 'react-dom', 'react/jsx-runtime', 'react/jsx-dev-runtime'],
+        external: [
+          'react',
+          'react-dom',
+          'react/jsx-runtime',
+          'react/jsx-dev-runtime',
+          '@tanstack/react-query',
+          'axios',
+          'clsx',
+          'date-fns',
+          'lucide-react',
+          'pusher-js',
+          'sonner',
+          'tailwind-merge'
+        ],
         output: {
           banner: `'use client';\nif (typeof globalThis !== 'undefined' && typeof globalThis.self === 'undefined') {\n  globalThis.self = globalThis;\n}\n`,
           globals: {

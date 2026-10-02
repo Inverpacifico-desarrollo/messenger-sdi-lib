@@ -38,11 +38,15 @@ export interface ChatProviderProps {
 
 const ChatContext = createContext<ChatContextValue | null>(null)
 
-function validateChatConfig(config: ChatConfig): void {
+/**
+ * Valida la configuración estructural del chat.
+ * NO valida `authToken`: un token vacío es un estado transitorio legítimo
+ * (login en curso, refresh, lectura asíncrona de cookie), no un error de configuración.
+ */
+function getConfigError(config: ChatConfig): Error | null {
   const missingValues: string[] = []
 
   if (!config.apiBaseUrl?.trim()) missingValues.push('apiBaseUrl')
-  if (!config.authToken?.trim()) missingValues.push('authToken')
   if (config.applicationId === undefined || config.applicationId === null) {
     missingValues.push('applicationId')
   }
@@ -61,14 +65,12 @@ function validateChatConfig(config: ChatConfig): void {
     }
   }
 
-  if (missingValues.length > 0) {
-    throw new Error(`Configuración incompleta del chat: ${missingValues.join(', ')}`)
-  }
+  return missingValues.length > 0
+    ? new Error(`Configuración incompleta del chat: ${missingValues.join(', ')}`)
+    : null
 }
 
 export function ChatProvider({ config, children }: ChatProviderProps) {
-  validateChatConfig(config)
-
   const [queryClient] = useState(
     () =>
       new QueryClient({
@@ -82,25 +84,50 @@ export function ChatProvider({ config, children }: ChatProviderProps) {
       })
   )
 
-  const { authToken } = config
+  const { authToken, apiBaseUrl, applicationId, reverb } = config
+
+  // Se memoiza con valores primitivos para que no se recalcule si el anfitrión
+  // recrea el objeto `config` en cada render.
+  const configError = useMemo(
+    () => getConfigError(config),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      apiBaseUrl,
+      applicationId,
+      reverb?.key,
+      reverb?.host,
+      reverb?.port,
+      reverb?.wsPath,
+      reverb?.scheme
+    ]
+  )
+
   const [currentUser, setCurrentUserState] = useState<UserChat | null>(null)
   const [permissions, setPermissions] = useState<string[]>([])
   const [loadedContextKey, setLoadedContextKey] = useState<string | null>(null)
   const [error, setError] = useState<Error | null>(null)
   const [errorContextKey, setErrorContextKey] = useState<string | null>(null)
-  const contextKey = JSON.stringify([config.apiBaseUrl, config.applicationId, authToken])
+  const contextKey = JSON.stringify([apiBaseUrl, applicationId, authToken])
+
+  // Error de configuración: se reporta una vez en consola, sin romper la app anfitriona.
+  useEffect(() => {
+    if (configError) {
+      console.error(`[Chat] ${configError.message}`)
+    }
+  }, [configError])
 
   useEffect(() => {
     let isMounted = true
 
-    if (!authToken) {
+    // Configuración inválida o token aún no disponible: no hay nada que cargar.
+    if (configError || !authToken) {
       return () => {
         isMounted = false
       }
     }
 
     configureChatHttp({
-      apiBaseUrl: config.apiBaseUrl,
+      apiBaseUrl,
       authToken
     })
 
@@ -111,15 +138,15 @@ export function ChatProvider({ config, children }: ChatProviderProps) {
 
         const userData: UserChat = chatUserResponse.data.data
 
-        const permissionResponse = await getPermissionsMessenger({
-          userId: userData.attributes.user_auth_id,
-          applicationId: config.applicationId
-        })
-        const permissionData = permissionResponse.data.data?.map((s) => s.attributes.name) ?? []
-
         if (!userData?.id) {
           throw new Error('La respuesta no contiene un usuario válido para el chat')
         }
+
+        const permissionResponse = await getPermissionsMessenger({
+          userId: userData.attributes.user_auth_id,
+          applicationId
+        })
+        const permissionData = permissionResponse.data.data?.map((s) => s.attributes.name) ?? []
 
         if (isMounted) {
           setCurrentUserState(userData)
@@ -128,10 +155,10 @@ export function ChatProvider({ config, children }: ChatProviderProps) {
           setError(null)
           setErrorContextKey(null)
         }
-      } catch (error) {
+      } catch (err) {
         if (isMounted) {
-          console.error('Error al cargar el usuario en ChatProvider:', error)
-          setError(error instanceof Error ? error : new Error('Error al inicializar el chat'))
+          console.error('Error al cargar el usuario en ChatProvider:', err)
+          setError(err instanceof Error ? err : new Error('Error al inicializar el chat'))
           setErrorContextKey(contextKey)
         }
       }
@@ -142,7 +169,7 @@ export function ChatProvider({ config, children }: ChatProviderProps) {
     return () => {
       isMounted = false
     }
-  }, [authToken, config.apiBaseUrl, config.applicationId, contextKey])
+  }, [configError, authToken, apiBaseUrl, applicationId, contextKey])
 
   const setCurrentUser = (user: UserChat) => {
     setCurrentUserState(user)
@@ -153,8 +180,9 @@ export function ChatProvider({ config, children }: ChatProviderProps) {
   }, [currentUser])
 
   const isReady = Boolean(currentUser?.id) && loadedContextKey === contextKey
-  const hasError = errorContextKey === contextKey && error !== null
-  const isLoadingUser = Boolean(authToken) && !isReady && !hasError
+  const hasRuntimeError = errorContextKey === contextKey && error !== null
+  const hasError = Boolean(configError) || hasRuntimeError
+  const isLoadingUser = !configError && Boolean(authToken) && !isReady && !hasRuntimeError
 
   const value: ChatContextValue = {
     currentUser,
@@ -162,7 +190,7 @@ export function ChatProvider({ config, children }: ChatProviderProps) {
     permissions,
     isLoadingUser,
     hasError,
-    error: hasError ? error : null,
+    error: configError ?? (hasRuntimeError ? error : null),
     config,
     setCurrentUser
   }
@@ -181,7 +209,7 @@ export function useOptionalChatContext(): ChatContextValue | null {
 export function useChatContext(): ChatContextValue {
   const context = useContext(ChatContext)
   if (!context) {
-    throw new Error('useChatContext debe usarse dentro de un ChatProvider con un usuario válido')
+    throw new Error('useChatContext debe usarse dentro de un ChatProvider')
   }
   return context
 }
