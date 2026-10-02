@@ -1,12 +1,11 @@
-'use client'
-
-import React from 'react'
+import React, { useRef, useState } from 'react'
 import type { Conversation } from '../types/conversation.types'
 import useConversationChat from '../hooks/use-conversation-chat'
 import { ConversationChatHeader } from './conversation-chat-header'
 import { ConversationMessagesList } from './conversation-messages-list'
 import { ConversationComposer } from './conversation-composer'
 import { ChatWallpaper } from './chat-wallpaper'
+import { UploadCloud } from 'lucide-react'
 
 export interface ConversationChatPanelProps {
   conversation: Conversation
@@ -42,8 +41,84 @@ export function ConversationChatPanel({
     }
   })
 
+  const [isDraggingOver, setIsDraggingOver] = useState(false)
+  const dragCounterRef = useRef(0)
+
+  const isActionDisabled = readOnly || chat.isClosed || chat.isSending || chat.isUploading
+
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (isActionDisabled) return
+
+    const hasFiles = e.dataTransfer.types && Array.from(e.dataTransfer.types).includes('Files')
+    if (hasFiles) {
+      dragCounterRef.current += 1
+      setIsDraggingOver(true)
+    }
+  }
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (isActionDisabled) return
+    e.dataTransfer.dropEffect = 'copy'
+  }
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current -= 1
+    if (dragCounterRef.current <= 0) {
+      dragCounterRef.current = 0
+      setIsDraggingOver(false)
+    }
+  }
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounterRef.current = 0
+    setIsDraggingOver(false)
+
+    if (isActionDisabled) return
+
+    const files = e.dataTransfer.files
+    if (files && files.length > 0) {
+      const file = files[0]
+      if (file.type.startsWith('image/')) {
+        chat.handleSelectFile(file)
+      }
+    }
+  }
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+    if (isActionDisabled) return
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const file = item.getAsFile()
+        if (file) {
+          e.preventDefault()
+          chat.handleSelectFile(file)
+          return
+        }
+      }
+    }
+  }
+
   return (
-    <div className='sdi-messenger-root flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'>
+    <div
+      className='sdi-messenger-root relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'
+      onDragEnter={handleDragEnter}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      onPaste={handlePaste}
+    >
       {/* Cabecera del Chat Activo */}
       {showHeader && (
         <ConversationChatHeader
@@ -62,6 +137,25 @@ export function ConversationChatPanel({
       <div className='relative flex flex-1 min-h-0 w-full flex-col overflow-hidden bg-[#f4f6f8]/70 dark:bg-[#0a0f1d]'>
         {/* Fondo estilo Wallpaper Corporativo SDI continuo */}
         {showWallpaper && <ChatWallpaper />}
+
+        {/* Overlay visual al arrastrar imágenes */}
+        {isDraggingOver && (
+          <div className='absolute inset-0 z-50 flex flex-col items-center justify-center bg-blue-500/10 dark:bg-blue-600/20 backdrop-blur-xs border-2 border-dashed border-blue-500/70 dark:border-blue-400/70 rounded-2xl m-2 pointer-events-none transition-all duration-200 animate-in fade-in zoom-in-95'>
+            <div className='flex flex-col items-center gap-3 p-6 rounded-2xl bg-white/95 dark:bg-neutral-900/95 shadow-xl border border-blue-500/20 text-center max-w-xs mx-4'>
+              <div className='flex size-14 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 shadow-inner'>
+                <UploadCloud className='size-7 animate-bounce' />
+              </div>
+              <div>
+                <p className='text-sm font-semibold text-neutral-800 dark:text-neutral-100'>
+                  Suelta tu imagen aquí
+                </p>
+                <p className='text-xs text-neutral-500 dark:text-neutral-400 mt-0.5'>
+                  Se adjuntará para que puedas enviarla
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Área Principal de Mensajes */}
         <ConversationMessagesList

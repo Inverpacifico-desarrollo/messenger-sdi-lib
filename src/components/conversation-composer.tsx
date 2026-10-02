@@ -89,6 +89,24 @@ export function ConversationComposer({
     event.target.value = ''
   }
 
+  const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+    if (isSending || isUploading) return
+    const items = e.clipboardData?.items
+    if (!items) return
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i]
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const file = item.getAsFile()
+        if (file) {
+          e.preventDefault()
+          onSelectFile(file)
+          return
+        }
+      }
+    }
+  }
+
   return (
     <div className='shrink-0 px-3 pb-3 pt-1 sm:px-4 sm:pb-4'>
       {/* Campo de Texto y Botones Flotantes */}
@@ -140,6 +158,7 @@ export function ConversationComposer({
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             placeholder={`Responder a ${conversationName}...`}
             rows={1}
             className='!min-h-0 !border-transparent max-h-30 flex-1 resize-none overflow-y-hidden rounded-xl bg-transparent px-2 py-1 text-xs leading-5 shadow-none !outline-none focus:!border-transparent focus:!outline-none focus-visible:!border-transparent focus-visible:!ring-0 focus-visible:!outline-none sm:text-sm text-neutral-800 dark:text-neutral-100 placeholder:text-neutral-400'
