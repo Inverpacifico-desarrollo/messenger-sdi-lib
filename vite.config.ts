@@ -5,6 +5,20 @@ import dts from 'vite-plugin-dts'
 import { resolve } from 'path'
 import prefixer from 'postcss-prefix-selector'
 
+const unwrapLayersPlugin = () => ({
+  postcssPlugin: 'postcss-unwrap-layers',
+  AtRule: {
+    layer(atRule: any) {
+      if (atRule.nodes && atRule.nodes.length > 0) {
+        atRule.replaceWith(atRule.nodes)
+      } else {
+        atRule.remove()
+      }
+    }
+  }
+})
+unwrapLayersPlugin.postcss = true
+
 export default defineConfig(({ mode }) => {
   const isLibrary = mode === 'production' || process.env.BUILD_LIB === 'true'
 
@@ -43,7 +57,8 @@ export default defineConfig(({ mode }) => {
               }
               return `${prefix} ${selector}`
             }
-          })
+          }),
+          unwrapLayersPlugin()
         ]
       }
     },
