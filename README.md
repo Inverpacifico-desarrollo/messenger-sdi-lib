@@ -19,18 +19,9 @@ Librería de componentes React para mensajería y chat de soporte en tiempo real
 
 ### Opción A: Desde archivo empaquetado local (`.tgz`)
 ```bash
-npm install ./ruta/a/messenger-sdi-lib-1.0.0.tgz
+npm install https://github.com/Inverpacifico-desarrollo/messenger-sdi-lib.git#lib
 ```
 
-### Opción B: Desde registro NPM (si está publicado)
-```bash
-npm install messenger-sdi-lib
-# o con pnpm / yarn
-pnpm add messenger-sdi-lib
-yarn add messenger-sdi-lib
-```
-
----
 
 ## 🚀 Requisitos Previos
 
