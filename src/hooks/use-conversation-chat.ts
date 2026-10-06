@@ -109,8 +109,6 @@ export const useConversationChat = (
     setIsNearBottom(nearBottom)
     if (nearBottom) {
       setNewMessagesCount(0)
-      setVisibleDate('Hoy')
-      return
     }
 
     const dateElements = container.querySelectorAll<HTMLElement>('[data-date-group]')
@@ -119,14 +117,19 @@ export const useConversationChat = (
       return
     }
 
-    const containerTop = container.scrollTop
+    const viewportTop = container.scrollTop
+    const viewportBottom = viewportTop + container.clientHeight
     let foundDate = ''
 
     for (let i = 0; i < dateElements.length; i++) {
       const el = dateElements[i]
-      if (el.offsetTop + el.offsetHeight >= containerTop + 30) {
+      const elementTop = el.offsetTop
+      const elementBottom = elementTop + el.offsetHeight
+
+      // Usa el grupo más bajo que todavía ocupa espacio dentro del viewport.
+      // Así la fecha representa los mensajes visibles más recientes.
+      if (elementTop < viewportBottom && elementBottom > viewportTop) {
         foundDate = el.getAttribute('data-date-group') || ''
-        break
       }
     }
 
@@ -159,7 +162,8 @@ export const useConversationChat = (
     container.scrollTop = container.scrollHeight
     isInitialScrollDoneRef.current = true
     setIsNearBottom(true)
-  }, [conversation.id, isLoading, messages.length])
+    updateScrollIndicators()
+  }, [conversation.id, isLoading, messages.length, updateScrollIndicators])
 
   // Scroll Anchoring: al cargar mensajes más antiguos arriba, preservar la posición visual
   useLayoutEffect(() => {
