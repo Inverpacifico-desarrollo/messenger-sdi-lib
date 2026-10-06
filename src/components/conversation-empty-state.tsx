@@ -52,7 +52,7 @@ export function ConversationEmptyState({ onNewConversation }: ConversationEmptyS
   }
 
   return (
-    <div className=' sdi-messenger-root relative flex h-full w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-[#f4f6f8] dark:bg-[#0a0f1d] shadow-xs'>
+    <div className=' sdi-messenger-root relative flex h-full w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-[#0a0f1d] shadow-xs'>
 
       <div className='relative z-10 flex max-w-md flex-col items-center px-6 text-center'>
         <div className='mb-5 flex size-16 items-center justify-center rounded-2xl border border-blue-500/20 bg-blue-500/10 text-blue-600 dark:text-blue-400 shadow-xs'>

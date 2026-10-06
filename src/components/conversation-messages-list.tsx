@@ -126,6 +126,12 @@ export function ConversationMessagesList({
               data-date-group={messageGroup.date}
               className='space-y-4'
             >
+              <div className='flex items-center justify-center py-1'>
+                <span className='rounded-full bg-neutral-100 dark:bg-neutral-800 px-3 py-1 text-[11px] font-medium text-neutral-500 dark:text-neutral-400 shadow-xs'>
+                  {formatDisplayDate(messageGroup.date)}
+                </span>
+              </div>
+
               {[...messageGroup.messages].reverse().map((message) => {
                 const isOwnMessage =
                   String(message?.relationships?.sender?.id) === String(currentUserId)
