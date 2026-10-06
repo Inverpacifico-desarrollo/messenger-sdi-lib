@@ -126,19 +126,30 @@ export function ConversationMessagesList({
               data-date-group={messageGroup.date}
               className='space-y-4'
             >
+              <div className='flex items-center justify-center py-1'>
+                <span className='rounded-full bg-neutral-100 dark:bg-neutral-800 px-3 py-1 text-[11px] font-medium text-neutral-500 dark:text-neutral-400 shadow-xs'>
+                  {formatDisplayDate(messageGroup.date)}
+                </span>
+              </div>
+
               {[...messageGroup.messages].reverse().map((message) => {
                 const isOwnMessage =
                   String(message?.relationships?.sender?.id) === String(currentUserId)
 
                 return (
-                  <ConversationMessageItem
+                  <div
                     key={message.id}
-                    message={isOwnMessage ? { ...message, local_status: 'sent' } : message}
-                    isOwnMessage={isOwnMessage}
-                    isGroup={isGroup}
-                    conversationName={conversationName}
-                    conversationAvatarUrl={conversationUser?.attributes.avatar_url || undefined}
-                  />
+                    data-message-date={messageGroup.date}
+                    className='w-full'
+                  >
+                    <ConversationMessageItem
+                      message={isOwnMessage ? { ...message, local_status: 'sent' } : message}
+                      isOwnMessage={isOwnMessage}
+                      isGroup={isGroup}
+                      conversationName={conversationName}
+                      conversationAvatarUrl={conversationUser?.attributes.avatar_url || undefined}
+                    />
+                  </div>
                 )
               })}
             </div>
@@ -152,14 +163,19 @@ export function ConversationMessagesList({
                 </span>
               </div>
               {[...visibleOptimisticMessages].map((message) => (
-                <ConversationMessageItem
+                <div
                   key={message.id}
-                  message={message}
-                  isOwnMessage
-                  isGroup={isGroup}
-                  conversationName={conversationName}
-                  conversationAvatarUrl={conversationUser?.attributes.avatar_url || undefined}
-                />
+                  data-message-date={message.attributes.created_at?.slice(0, 10) || 'Hoy'}
+                  className='w-full'
+                >
+                  <ConversationMessageItem
+                    message={message}
+                    isOwnMessage
+                    isGroup={isGroup}
+                    conversationName={conversationName}
+                    conversationAvatarUrl={conversationUser?.attributes.avatar_url || undefined}
+                  />
+                </div>
               ))}
             </div>
           )}

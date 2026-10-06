@@ -38,16 +38,20 @@ if (typeof window !== 'undefined') {
     const originalPushState = window.history.pushState
     window.history.pushState = function (...args) {
       const result = originalPushState.apply(this, args)
-      window.dispatchEvent(new Event('pushstate'))
-      window.dispatchEvent(new Event('locationchange'))
+      window.setTimeout(() => {
+        window.dispatchEvent(new Event('pushstate'))
+        window.dispatchEvent(new Event('locationchange'))
+      }, 0)
       return result
     }
 
     const originalReplaceState = window.history.replaceState
     window.history.replaceState = function (...args) {
       const result = originalReplaceState.apply(this, args)
-      window.dispatchEvent(new Event('replacestate'))
-      window.dispatchEvent(new Event('locationchange'))
+      window.setTimeout(() => {
+        window.dispatchEvent(new Event('replacestate'))
+        window.dispatchEvent(new Event('locationchange'))
+      }, 0)
       return result
     }
   }
@@ -130,4 +134,3 @@ export function useFloatingChatVisibility({
 
   return { shouldHide, pathname }
 }
-

@@ -109,28 +109,31 @@ export const useConversationChat = (
     setIsNearBottom(nearBottom)
     if (nearBottom) {
       setNewMessagesCount(0)
+    }
+
+    const messageElements = container.querySelectorAll<HTMLElement>('[data-message-date]')
+    if (messageElements.length === 0) {
       setVisibleDate('Hoy')
       return
     }
 
-    const dateElements = container.querySelectorAll<HTMLElement>('[data-date-group]')
-    if (dateElements.length === 0) {
-      setVisibleDate('Hoy')
-      return
-    }
+    const containerRect = container.getBoundingClientRect()
+    const viewportTop = containerRect.top
+    const viewportBottom = containerRect.bottom
+    let foundDate: string | null = null
 
-    const containerTop = container.scrollTop
-    let foundDate = ''
+    for (let i = 0; i < messageElements.length; i++) {
+      const element = messageElements[i]
+      const elementRect = element.getBoundingClientRect()
 
-    for (let i = 0; i < dateElements.length; i++) {
-      const el = dateElements[i]
-      if (el.offsetTop + el.offsetHeight >= containerTop + 30) {
-        foundDate = el.getAttribute('data-date-group') || ''
+      // El primer mensaje que aparece de arriba hacia abajo determina la fecha.
+      if (elementRect.bottom > viewportTop && elementRect.top < viewportBottom) {
+        foundDate = element.getAttribute('data-message-date')
         break
       }
     }
 
-    setVisibleDate(foundDate || 'Hoy')
+    setVisibleDate(foundDate || messageElements[messageElements.length - 1].getAttribute('data-message-date') || 'Hoy')
   }, [])
 
   // Reiniciar estados de scroll y mensajes optimistas al cambiar de conversación
@@ -159,7 +162,8 @@ export const useConversationChat = (
     container.scrollTop = container.scrollHeight
     isInitialScrollDoneRef.current = true
     setIsNearBottom(true)
-  }, [conversation.id, isLoading, messages.length])
+    updateScrollIndicators()
+  }, [conversation.id, isLoading, messages.length, updateScrollIndicators])
 
   // Scroll Anchoring: al cargar mensajes más antiguos arriba, preservar la posición visual
   useLayoutEffect(() => {
