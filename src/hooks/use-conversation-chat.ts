@@ -111,29 +111,29 @@ export const useConversationChat = (
       setNewMessagesCount(0)
     }
 
-    const dateElements = container.querySelectorAll<HTMLElement>('[data-date-group]')
-    if (dateElements.length === 0) {
+    const messageElements = container.querySelectorAll<HTMLElement>('[data-message-date]')
+    if (messageElements.length === 0) {
       setVisibleDate('Hoy')
       return
     }
 
-    const viewportTop = container.scrollTop
-    const viewportBottom = viewportTop + container.clientHeight
-    let foundDate = ''
+    const containerRect = container.getBoundingClientRect()
+    const viewportTop = containerRect.top
+    const viewportBottom = containerRect.bottom
+    let foundDate: string | null = null
 
-    for (let i = 0; i < dateElements.length; i++) {
-      const el = dateElements[i]
-      const elementTop = el.offsetTop
-      const elementBottom = elementTop + el.offsetHeight
+    for (let i = 0; i < messageElements.length; i++) {
+      const element = messageElements[i]
+      const elementRect = element.getBoundingClientRect()
 
-      // Usa el grupo más bajo que todavía ocupa espacio dentro del viewport.
-      // Así la fecha representa los mensajes visibles más recientes.
-      if (elementTop < viewportBottom && elementBottom > viewportTop) {
-        foundDate = el.getAttribute('data-date-group') || ''
+      // El primer mensaje que aparece de arriba hacia abajo determina la fecha.
+      if (elementRect.bottom > viewportTop && elementRect.top < viewportBottom) {
+        foundDate = element.getAttribute('data-message-date')
+        break
       }
     }
 
-    setVisibleDate(foundDate || 'Hoy')
+    setVisibleDate(foundDate || messageElements[messageElements.length - 1].getAttribute('data-message-date') || 'Hoy')
   }, [])
 
   // Reiniciar estados de scroll y mensajes optimistas al cambiar de conversación
