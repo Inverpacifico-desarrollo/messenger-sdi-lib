@@ -1,5 +1,8 @@
 import { Conversation } from '../types/conversation.types';
-export declare const useConversationsPage: () => {
+export interface UseConversationsPageOptions {
+    showToastOnUnread?: boolean;
+}
+export declare const useConversationsPage: ({ showToastOnUnread }?: UseConversationsPageOptions) => {
     conversations: Conversation[];
     selectedId: string;
     setSelectedId: import('react').Dispatch<import('react').SetStateAction<string>>;

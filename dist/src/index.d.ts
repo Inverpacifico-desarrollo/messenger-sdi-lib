@@ -1,0 +1,17 @@
+export { ChatProvider, useChatContext, useOptionalChatContext, type ChatConfig, type ChatContextValue, type ChatProviderProps } from './context/chat-context';
+export { FloatingChat, type FloatingChatProps, type FloatingChatView, type FloatingChatCorner } from './components/floating-chat';
+export { ConversationChatPanel, type ConversationChatPanelProps } from './components/conversation-chat-panel';
+export { ConversationEmptyState } from './components/conversation-empty-state';
+export { ConversationContextPanel } from './components/conversation-context-panel';
+export { ConversationsSidebarList, type ConversationsSidebarListProps } from './components/conversations-sidebar-list';
+export { NewConversationDialog, type NewConversationDialogProps } from './components/new-conversation-dialog';
+export { RequestSupportForm, type RequestSupportFormProps } from './components/request-support-form';
+export { default as useConversationsPage, type UseConversationsPageOptions } from './hooks/use-conversations-page';
+export { default as useConversationChat } from './hooks/use-conversation-chat';
+export { default as useShowConversation, type UseShowConversationOptions } from './hooks/use-show-conversation';
+export type { Conversation, ConversationType, CreateConversationPayload, TypingEvent, UnreadEvent } from './types/conversation.types';
+export type { Message, MessageAttachment, MessageType, CreateMessagePayload, UploadMessageFilePayload } from './types/message.types';
+export type { UserChat } from './types/user-chat.types';
+export type { RequestChatSupportPayload, RequestChatSupportResponse } from './types/chat-support.types';
+export { LIB_VERSION } from './utils/version';
+export { playNotificationSound, type NotificationSoundType, type PlaySoundOptions } from './utils/audio.util';

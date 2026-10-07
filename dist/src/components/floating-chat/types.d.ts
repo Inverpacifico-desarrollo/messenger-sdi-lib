@@ -39,4 +39,9 @@ export interface FloatingChatProps {
      * Si se omite, se detectará automáticamente en tiempo real.
      */
     currentPath?: string;
+    /**
+     * Muestra notificaciones toast emergentes al recibir mensajes no leídos.
+     * Por defecto: false (el widget flotante ya dispone de badges e indicadores visuales).
+     */
+    showToastOnUnread?: boolean;
 }
