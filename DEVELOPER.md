@@ -83,7 +83,7 @@ npm pack
 
 Esto generará un archivo comprimido como:
 ```text
-messenger-sdi-lib-1.0.0.tgz
+messenger-sdi-lib-1.2.2.tgz
 ```
 
 ### Paso 2: Instalar en el proyecto anfitrión (Host App)
@@ -91,18 +91,19 @@ Copia o haz referencia al archivo `.tgz` desde tu proyecto de destino:
 
 ```bash
 # Dentro del proyecto anfitrión:
-npm install ../ruta-a/messenger-sdi-lib-1.0.0.tgz
+npm install ../ruta-a/messenger-sdi-lib-1.2.2.tgz
 ```
 
 > **Tip para actualizar cambios:** Si realizas cambios en la librería y generas un nuevo `.tgz`, para forzar la actualización en la app anfitriona ejecuta:
 > ```bash
-> npm install ../ruta-a/messenger-sdi-lib-1.0.0.tgz --force
+> npm install ../ruta-a/messenger-sdi-lib-1.2.2.tgz --force
 > ```
 
 ---
 
-## 🛡️ 7. Arquitectura de Estilos y Encapsulamiento
+## 🛡️ 7. Arquitectura de Estado y Estilos
 
+- **Gestión de Estado Nativa (Zero React Query)**: Todas las consultas, mutaciones y paginación se gestionan mediante hooks nativos en `src/hooks/use-query.ts` y `src/hooks/use-mutate.ts`, garantizando compatibilidad absoluta con cualquier app anfitriona.
 - **Tailwind v4**: Utiliza `@tailwindcss/vite` para procesar el diseño y utilidades.
 - **PostCSS Scoping (`postcss-prefix-selector`)**: En [`vite.config.ts`](file:///c:/Users/lhernandez/Desktop/dev/messenger-sdi-lib/vite.config.ts), todas las reglas CSS se encapsulan bajo `.sdi-messenger-root`.
 - **Componentes Raíz**: Si creas un nuevo componente independiente que pueda ser consumido fuera del widget flotante, asegúrate de que su contenedor principal incluya la clase `sdi-messenger-root`.

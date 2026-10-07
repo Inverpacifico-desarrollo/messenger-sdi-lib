@@ -1,7 +1,6 @@
 'use client'
 
 import React, { createContext, useContext, useEffect, useMemo, useState } from 'react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { getUserByUserAuthIdChatService } from '../services/user.services'
 import { UserChat } from '../types/user-chat.types'
 import { getPermissionsMessenger, meService } from '../services/auth-services'
@@ -71,19 +70,6 @@ function getConfigError(config: ChatConfig): Error | null {
 }
 
 export function ChatProvider({ config, children }: ChatProviderProps) {
-  const [queryClient] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            refetchOnWindowFocus: false,
-            retry: 1,
-            staleTime: 1000 * 60 * 2
-          }
-        }
-      })
-  )
-
   const { authToken, apiBaseUrl, applicationId, reverb } = config
 
   // Se memoiza con valores primitivos para que no se recalcule si el anfitrión
@@ -195,11 +181,7 @@ export function ChatProvider({ config, children }: ChatProviderProps) {
     setCurrentUser
   }
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
-    </QueryClientProvider>
-  )
+  return <ChatContext.Provider value={value}>{children}</ChatContext.Provider>
 }
 
 export function useOptionalChatContext(): ChatContextValue | null {

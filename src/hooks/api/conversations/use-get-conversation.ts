@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
 import { getConversationService } from '../../../services/conversation.services'
+import { Conversation } from '../../../types/conversation.types'
+import { useQuery } from '../../use-query'
 
 interface Props {
   conversationId?: string
@@ -7,18 +8,21 @@ interface Props {
 }
 
 const useGetConversation = ({ conversationId, enabled = true }: Props = {}) => {
+  const isEnabled = enabled && Boolean(conversationId)
+
   const query = useQuery({
     queryKey: ['conversation', conversationId],
     queryFn: () => getConversationService(conversationId as string),
-    enabled: enabled && Boolean(conversationId),
-    refetchOnWindowFocus: false
+    enabled: isEnabled,
+    keepPreviousData: true
   })
 
   return {
-    data: query.data?.data?.data ?? null,
-    isLoading: query.isPending,
+    data: (query.data?.data?.data as Conversation | null) ?? null,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
     isError: query.isError,
-    errors: (query.error as any)?.data ?? {},
+    errors: query.errors,
     refetch: query.refetch
   }
 }
