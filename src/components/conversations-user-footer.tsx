@@ -6,6 +6,7 @@ import { MessageSquarePlus, WifiOff } from 'lucide-react'
 import { capitalizeWords } from '../utils/conversation.util'
 import { useChatContext } from '../context/chat-context'
 import { useCheckHasPermissionMessenger } from '../hooks/use-check-has-permission-messenger'
+import { LIB_VERSION } from '../utils/version'
 
 export interface ConversationsUserFooterProps {
   onNewConversation?: () => void
@@ -72,7 +73,13 @@ export function ConversationsUserFooter({
           <p className='truncate text-xs font-bold text-neutral-900 dark:text-neutral-100'>
             {loggedUserName}
           </p>
-          <p className='truncate text-[10px] text-neutral-500 dark:text-neutral-400'>{userEmail}</p>
+          <div className='flex items-center gap-1.5 text-[10px] leading-tight text-neutral-500 dark:text-neutral-400 mt-0.5'>
+            <span className='truncate'>{userEmail}</span>
+            <span className='text-neutral-300 dark:text-neutral-700 select-none'>•</span>
+            <span className='font-mono text-[10px] text-neutral-400 dark:text-neutral-500 shrink-0'>
+              v{LIB_VERSION}
+            </span>
+          </div>
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import React from 'react'
 import { LifeBuoy, MessagesSquare, ChevronRight, ShieldCheck, X } from 'lucide-react'
 import { Button } from '../../../ui'
 import { ConversationsUserFooter } from '../../conversations-user-footer'
+import { LIB_VERSION } from '../../../utils/version'
 
 interface FloatingChatHomeViewProps {
   title: string
@@ -134,9 +135,14 @@ export function FloatingChatHomeView({
         )}
 
         <div className='rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-800/30 p-3 mt-4 text-[11px] text-neutral-500 dark:text-neutral-400 space-y-1.5'>
-          <div className='flex items-center gap-1.5 font-semibold text-neutral-800 dark:text-neutral-200 text-xs'>
-            <ShieldCheck className='size-3.5 text-emerald-600' />
-            <span>Mesa de Ayuda SDI</span>
+          <div className='flex items-center justify-between'>
+            <div className='flex items-center gap-1.5 font-semibold text-neutral-800 dark:text-neutral-200 text-xs'>
+              <ShieldCheck className='size-3.5 text-emerald-600' />
+              <span>Mesa de Ayuda SDI</span>
+            </div>
+            <span className='text-[10px] font-mono text-neutral-400 dark:text-neutral-500'>
+              v{LIB_VERSION}
+            </span>
           </div>
           <p className='leading-relaxed'>
             Tus solicitudes quedan registradas con trazabilidad y número de ticket en la plataforma

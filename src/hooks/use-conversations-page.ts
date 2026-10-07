@@ -8,7 +8,13 @@ import useDebounce from './use-debounce'
 import { useChatContext } from '../context/chat-context'
 import { useCheckHasPermissionMessenger } from './use-check-has-permission-messenger'
 
-export const useConversationsPage = () => {
+export interface UseConversationsPageOptions {
+  showToastOnUnread?: boolean
+}
+
+export const useConversationsPage = ({
+  showToastOnUnread = true
+}: UseConversationsPageOptions = {}) => {
   const queryClient = useQueryClient()
   const { config, currentUser, currentUserId } = useChatContext()
 
@@ -56,7 +62,7 @@ export const useConversationsPage = () => {
 
   const handleUnreadUpdate = useCallback(
     (event: UnreadEvent) => {
-      if (String(event.conversation_id) !== selectedId) {
+      if (showToastOnUnread && String(event.conversation_id) !== selectedId) {
         toast.info('Nuevo mensaje', {
           id: `conversation-message-${event.message.id}`,
           description: event.message.body || 'Tienes un mensaje nuevo',
@@ -73,7 +79,7 @@ export const useConversationsPage = () => {
       queryClient.invalidateQueries({ queryKey: ['list-conversations'] })
       refetchConversations()
     },
-    [queryClient, refetchConversations, selectedId]
+    [queryClient, refetchConversations, selectedId, showToastOnUnread]
   )
 
   const handleRealtimeConversationCreated = useCallback(() => {

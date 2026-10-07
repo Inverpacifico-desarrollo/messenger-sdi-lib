@@ -37,7 +37,8 @@ export function FloatingChat({
   showOnlyPaths,
   hideCondition,
   hidden = false,
-  currentPath
+  currentPath,
+  showToastOnUnread = false
 }: FloatingChatProps) {
   // Verificación de permisos de Messenger
   const hasReadChat = useCheckHasPermissionMessenger({
@@ -124,7 +125,9 @@ export function FloatingChat({
     selectConversation,
     setIsNewConversationOpen,
     handleConversationCreated
-  } = useConversationsPage()
+  } = useConversationsPage({
+    showToastOnUnread
+  })
 
   // Contador total de mensajes sin leer
   const totalUnreadCount = useMemo(() => {
@@ -239,21 +242,23 @@ export function FloatingChat({
     return null
   }
 
+  if (hasError) return
+
   return (
     <div
       ref={containerRef}
       style={
         isDragging && dragPos
           ? {
-              position: 'fixed',
-              left: `${dragPos.x}px`,
-              top: `${dragPos.y}px`,
-              bottom: 'auto',
-              right: 'auto',
-              zIndex: 50,
-              touchAction: 'none',
-              transition: 'none'
-            }
+            position: 'fixed',
+            left: `${dragPos.x}px`,
+            top: `${dragPos.y}px`,
+            bottom: 'auto',
+            right: 'auto',
+            zIndex: 50,
+            touchAction: 'none',
+            transition: 'none'
+          }
           : undefined
       }
       className={cn(
@@ -272,13 +277,7 @@ export function FloatingChat({
             cardOriginClass
           )}
         >
-          {hasError ? (
-            <FloatingChatErrorView
-              error={chatError}
-              onClose={() => setIsOpen(false)}
-              onDragStart={startDrag}
-            />
-          ) : isLoadingUser ? (
+          {isLoadingUser ? (
             <FloatingChatSkeleton onDragStart={startDrag} />
           ) : (
             <>
