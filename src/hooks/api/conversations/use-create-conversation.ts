@@ -8,6 +8,13 @@ import { Conversation, CreateConversationPayload } from '../../../types/conversa
 const useCreateConversation = () => {
   const createConversation = useCallback(async (payload: CreateConversationPayload) => {
     const response = await createConversationService(payload)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('messenger:conversation-created', {
+          detail: { conversation: response.data.data }
+        })
+      )
+    }
     return response.data.data
   }, [])
 

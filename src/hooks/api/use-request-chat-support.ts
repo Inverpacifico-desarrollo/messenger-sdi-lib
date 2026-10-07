@@ -12,6 +12,13 @@ export const useRequestChatSupport = () => {
   const requestSupport = useCallback(async (payload: RequestChatSupportPayload) => {
     const response = await requestChatSupportService(payload)
     const data = (response.data as any)?.data ?? response.data
+    if (typeof window !== 'undefined' && data?.conversation_id) {
+      window.dispatchEvent(
+        new CustomEvent('messenger:conversation-created', {
+          detail: { conversationId: data.conversation_id }
+        })
+      )
+    }
     return data as RequestChatSupportResponse
   }, [])
 

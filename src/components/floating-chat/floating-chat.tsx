@@ -126,7 +126,8 @@ export function FloatingChat({
     setIsNewConversationOpen,
     handleConversationCreated
   } = useConversationsPage({
-    showToastOnUnread
+    showToastOnUnread,
+    isActive: isOpen && currentView === 'chat'
   })
 
   // Contador total de mensajes sin leer

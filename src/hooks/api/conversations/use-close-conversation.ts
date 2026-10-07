@@ -8,6 +8,13 @@ import { Conversation } from '../../../types/conversation.types'
 const useCloseConversation = () => {
   const closeConversation = useCallback(async (conversationId: string) => {
     const response = await closeConversationService(conversationId)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(
+        new CustomEvent('messenger:conversation-closed', {
+          detail: { conversationId }
+        })
+      )
+    }
     return response.data.data
   }, [])
 

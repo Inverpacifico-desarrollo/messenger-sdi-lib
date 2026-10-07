@@ -114,6 +114,22 @@ export const useShowConversation = (
     )
   }, [config.reverb, currentUserId, handleUnreadUpdate, isQueryEnabled])
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleSync = () => {
+      void refetch()
+    }
+
+    window.addEventListener('messenger:conversation-closed', handleSync)
+    window.addEventListener('messenger:conversation-updated', handleSync)
+
+    return () => {
+      window.removeEventListener('messenger:conversation-closed', handleSync)
+      window.removeEventListener('messenger:conversation-updated', handleSync)
+    }
+  }, [refetch])
+
   return {
     conversation: (conversation as Conversation | null) ?? null,
     isLoading,

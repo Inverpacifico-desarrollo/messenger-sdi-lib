@@ -11,10 +11,12 @@ import { playNotificationSound } from '../utils/audio.util'
 
 export interface UseConversationsPageOptions {
   showToastOnUnread?: boolean
+  isActive?: boolean
 }
 
 export const useConversationsPage = ({
-  showToastOnUnread = true
+  showToastOnUnread = true,
+  isActive = true
 }: UseConversationsPageOptions = {}) => {
   const { config, currentUser, currentUserId } = useChatContext()
   const { mutateAsync: markConversationAsRead } = useMarkConversationAsRead()
@@ -62,9 +64,9 @@ export const useConversationsPage = ({
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false)
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false)
 
-  // Si la conversación está abierta/enfocada, aseguramos que visualmente tenga unread_count: 0
+  // Solo si la vista está visible/activa y la conversación coincide, aseguramos unread_count: 0
   const conversations = useMemo(() => {
-    if (!selectedId) return rawConversations
+    if (!isActive || !selectedId) return rawConversations
     return rawConversations.map((conv) => {
       if (conv.id === selectedId && conv.attributes.unread_count > 0) {
         return {
@@ -77,20 +79,21 @@ export const useConversationsPage = ({
       }
       return conv
     })
-  }, [rawConversations, selectedId])
+  }, [isActive, rawConversations, selectedId])
 
   const handleUnreadUpdate = useCallback(
     (event: UnreadEvent) => {
       const isFromOtherUser =
         currentUserId && String(event.message.sender_id) !== String(currentUserId)
 
+      const isFocused =
+        isActive && String(event.conversation_id) === selectedId
+
       if (isFromOtherUser) {
-        const isFocused =
-          String(event.conversation_id) === selectedId
         playNotificationSound(isFocused ? 'focused' : 'unfocused')
       }
 
-      if (showToastOnUnread && String(event.conversation_id) !== selectedId) {
+      if (showToastOnUnread && !isFocused) {
         toast.info('Nuevo mensaje', {
           id: `conversation-message-${event.message.id}`,
           description: event.message.body || 'Tienes un mensaje nuevo',
@@ -102,29 +105,35 @@ export const useConversationsPage = ({
             }
           }
         })
-        playNotificationSound('unfocused')
       }
 
       void refetchConversations()
     },
-    [currentUserId, refetchConversations, selectedId, showToastOnUnread]
+    [currentUserId, isActive, refetchConversations, selectedId, showToastOnUnread]
   )
 
   const handleRealtimeConversationCreated = useCallback(() => {
     void refetchConversations()
   }, [refetchConversations])
 
-  // Escuchar cuando una conversación es marcada como leída para sincronizar la lista
+  // Escuchar cuando una conversación es marcada como leída, cerrada o creada para sincronizar la lista
   useEffect(() => {
     if (typeof window === 'undefined') return
 
-    const handleConversationRead = () => {
+    const handleSync = () => {
       void refetchConversations()
     }
 
-    window.addEventListener('messenger:conversation-read', handleConversationRead)
+    window.addEventListener('messenger:conversation-read', handleSync)
+    window.addEventListener('messenger:conversation-closed', handleSync)
+    window.addEventListener('messenger:conversation-created', handleSync)
+    window.addEventListener('messenger:conversation-updated', handleSync)
+
     return () => {
-      window.removeEventListener('messenger:conversation-read', handleConversationRead)
+      window.removeEventListener('messenger:conversation-read', handleSync)
+      window.removeEventListener('messenger:conversation-closed', handleSync)
+      window.removeEventListener('messenger:conversation-created', handleSync)
+      window.removeEventListener('messenger:conversation-updated', handleSync)
     }
   }, [refetchConversations])
 
