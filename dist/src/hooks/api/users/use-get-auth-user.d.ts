@@ -8,8 +8,9 @@ export interface UseGetAuthUserProps {
 export declare const useGetAuthUser: ({ userId, enabled }?: UseGetAuthUserProps) => {
     userAuth: UserAuth | undefined;
     isLoading: boolean;
+    isFetching: boolean;
     isError: boolean;
-    error: Error | null;
-    refetch: (options?: import('@tanstack/query-core').RefetchOptions) => Promise<import('@tanstack/query-core').QueryObserverResult<AxiosResponse<ResponseAPI<UserAuth>, any, {}, any>, Error>>;
+    error: any;
+    refetch: () => Promise<AxiosResponse<ResponseAPI<UserAuth>, any, {}, any> | undefined>;
 };
 export default useGetAuthUser;

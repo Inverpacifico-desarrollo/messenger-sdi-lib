@@ -15,7 +15,8 @@ declare const useListUsers: (props?: Props) => {
         next: string | null;
     }> | undefined;
     isLoading: boolean;
+    isFetching: boolean;
     errors: any;
-    refetch: (options?: import('@tanstack/query-core').RefetchOptions) => Promise<import('@tanstack/query-core').QueryObserverResult<AxiosResponse<ResponseAPI<UserChat[]>, any, {}, any>, Error>>;
+    refetch: () => Promise<AxiosResponse<ResponseAPI<UserChat[]>, any, {}, any> | undefined>;
 };
 export default useListUsers;

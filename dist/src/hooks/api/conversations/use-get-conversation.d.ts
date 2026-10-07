@@ -1,12 +1,14 @@
+import { Conversation } from '../../../types/conversation.types';
 interface Props {
     conversationId?: string;
     enabled?: boolean;
 }
 declare const useGetConversation: ({ conversationId, enabled }?: Props) => {
-    data: import('../../..').Conversation | null;
+    data: Conversation | null;
     isLoading: boolean;
+    isFetching: boolean;
     isError: boolean;
     errors: any;
-    refetch: (options?: import('@tanstack/query-core').RefetchOptions) => Promise<import('@tanstack/query-core').QueryObserverResult<import('axios').AxiosResponse<import('../../../types/api.types').ResponseAPI<import('../../..').Conversation>, any, {}, any>, Error>>;
+    refetch: () => Promise<import('axios').AxiosResponse<import('../../../types/api.types').ResponseAPI<Conversation>, any, {}, any> | undefined>;
 };
 export default useGetConversation;
