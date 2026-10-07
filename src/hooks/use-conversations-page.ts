@@ -63,6 +63,15 @@ export const useConversationsPage = ({
 
   const handleUnreadUpdate = useCallback(
     (event: UnreadEvent) => {
+      const isFromOtherUser =
+        currentUserId && String(event.message.sender_id) !== String(currentUserId)
+
+      if (isFromOtherUser) {
+        const isFocused =
+          String(event.conversation_id) === selectedId
+        playNotificationSound(isFocused ? 'focused' : 'unfocused')
+      }
+
       if (showToastOnUnread && String(event.conversation_id) !== selectedId) {
         toast.info('Nuevo mensaje', {
           id: `conversation-message-${event.message.id}`,
@@ -81,7 +90,7 @@ export const useConversationsPage = ({
       queryClient.invalidateQueries({ queryKey: ['list-conversations'] })
       refetchConversations()
     },
-    [queryClient, refetchConversations, selectedId, showToastOnUnread]
+    [currentUserId, queryClient, refetchConversations, selectedId, showToastOnUnread]
   )
 
   const handleRealtimeConversationCreated = useCallback(() => {

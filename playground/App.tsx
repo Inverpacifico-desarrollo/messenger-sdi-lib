@@ -86,8 +86,8 @@ const App = () => {
           )} */}
         </div>
 
-        <ConversationsPage />
-        {/* <FloatingChat /> */}
+        {/* <ConversationsPage /> */}
+        <FloatingChat />
       </div>
     </ChatProvider>
   );
