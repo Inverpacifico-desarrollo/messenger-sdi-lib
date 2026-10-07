@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useEffect } from 'react'
 import useGetConversation from './api/conversations/use-get-conversation'
-import { Conversation, TypingEvent, UnreadEvent } from '../types/conversation.types'
+import { Conversation, UnreadEvent } from '../types/conversation.types'
 import { Message } from '../types/message.types'
 import { subscribeToConversation, subscribeToUser } from '../utils/reverb'
 import { toast } from 'sonner'
@@ -34,7 +33,6 @@ export const useShowConversation = (
     onUnread
   } = options
 
-  const queryClient = useQueryClient()
   const { config, currentUser, currentUserId } = useChatContext()
 
   const hasReadPermission = useCheckHasPermissionMessenger({
@@ -72,14 +70,11 @@ export const useShowConversation = (
         playNotificationSound(isFocused ? 'focused' : 'unfocused')
       }
 
-      queryClient.invalidateQueries({ queryKey: ['conversation', conversationIdStr] })
-      queryClient.invalidateQueries({ queryKey: ['list-conversations'] })
-      refetch()
+      void refetch()
       onMessage?.(message)
     },
-    [conversationIdStr, currentUserId, onMessage, queryClient, refetch]
+    [currentUserId, onMessage, refetch]
   )
-
 
   const handleUnreadUpdate = useCallback(
     (event: UnreadEvent) => {
@@ -91,17 +86,13 @@ export const useShowConversation = (
       }
 
       if (String(event.conversation_id) === conversationIdStr) {
-        queryClient.invalidateQueries({ queryKey: ['conversation', conversationIdStr] })
-        refetch()
+        void refetch()
       }
 
-      queryClient.invalidateQueries({ queryKey: ['list-conversations'] })
       onUnread?.(event)
     },
-    [conversationIdStr, onUnread, queryClient, refetch, showToastOnUnread]
+    [conversationIdStr, onUnread, refetch, showToastOnUnread]
   )
-
-
 
   useEffect(() => {
     if (!conversationIdNum || !isQueryEnabled) return
@@ -109,7 +100,7 @@ export const useShowConversation = (
     return subscribeToConversation(
       config.reverb,
       conversationIdNum,
-      handleMessage,
+      handleMessage
     )
   }, [config.reverb, conversationIdNum, handleMessage, isQueryEnabled])
 

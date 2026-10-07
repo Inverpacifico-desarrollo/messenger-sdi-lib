@@ -1,21 +1,31 @@
-import { useQuery } from '@tanstack/react-query'
 import { getPermissionsMessenger } from '../../../services/auth-services'
 import { useChatContext } from '../../../context/chat-context'
+import { useQuery } from '../../use-query'
 
 export const useGetUserPermissionMessenger = () => {
   const { config, currentUser } = useChatContext()
 
   const applicationId = config?.applicationId
   const userId = currentUser?.attributes.user_auth_id
+  const isEnabled = Boolean(applicationId !== undefined && applicationId !== null && userId)
 
-  return useQuery({
+  const query = useQuery({
     queryKey: ['get-permission-messenger', applicationId, userId],
-    enabled: Boolean(applicationId && userId),
-    refetchOnWindowFocus: false,
     queryFn: async () => {
-      if (!applicationId || !userId) return []
+      if (applicationId === undefined || applicationId === null || !userId) return []
       const { data } = await getPermissionsMessenger({ applicationId, userId })
-      return data.data
-    }
+      return data.data ?? []
+    },
+    enabled: isEnabled,
+    keepPreviousData: true,
+    initialData: []
   })
+
+  return {
+    data: query.data ?? [],
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
+    isError: query.isError,
+    refetch: query.refetch
+  }
 }

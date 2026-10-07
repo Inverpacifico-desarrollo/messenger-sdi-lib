@@ -1,8 +1,8 @@
-import { useQuery } from '@tanstack/react-query'
 import { AxiosResponse } from 'axios'
 import { UserAuth } from '../../../types/user-auth.types'
 import { ResponseAPI } from '../../../types/api.types'
 import { getAuthUserService } from '../../../services/user-auth.services'
+import { useQuery } from '../../use-query'
 
 export interface UseGetAuthUserProps {
   userId?: string | number | null
@@ -10,19 +10,19 @@ export interface UseGetAuthUserProps {
 }
 
 export const useGetAuthUser = ({ userId, enabled = true }: UseGetAuthUserProps = {}) => {
+  const isEnabled = Boolean(userId) && enabled
+
   const query = useQuery<AxiosResponse<ResponseAPI<UserAuth>>>({
     queryKey: ['auth-user', userId],
     queryFn: () => getAuthUserService(userId!),
-    enabled: Boolean(userId) && enabled,
-    refetchOnWindowFocus: false,
-    staleTime: 5 * 60 * 1000 // 5 minutos de cache
+    enabled: isEnabled,
+    keepPreviousData: true
   })
 
-  const userAuth = query.data?.data?.data
-
   return {
-    userAuth,
-    isLoading: query.isPending || query.isLoading,
+    userAuth: query.data?.data?.data,
+    isLoading: query.isLoading,
+    isFetching: query.isFetching,
     isError: query.isError,
     error: query.error,
     refetch: query.refetch

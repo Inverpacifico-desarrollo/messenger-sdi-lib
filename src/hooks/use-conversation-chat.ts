@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { InfiniteData, useQueryClient } from '@tanstack/react-query'
 import type { Conversation, TypingEvent } from '../types/conversation.types'
 import type { ConversationMessage, Message, MessageParams } from '../types/message.types'
-import type { ResponseApiMessage } from '../types/api.types'
-import type { AxiosResponse } from 'axios'
 import { getConversationName } from '../utils/conversation.util'
-import { createOptimisticMessage, mergeOlderGroups, prependMessage } from '../utils/message.util'
+import { createOptimisticMessage, mergeOlderGroups } from '../utils/message.util'
 import useListMessages from './api/messages/use-list-messages'
 import useSendMessage from './api/messages/use-send-message'
 import useUploadMessageFile from './api/messages/use-upload-message-file'
@@ -25,7 +22,6 @@ export const useConversationChat = (
   conversation: Conversation,
   options?: UseConversationChatOptions
 ) => {
-  const queryClient = useQueryClient()
   const { config, currentUser, currentUserId } = useChatContext()
 
   const params = useMemo<MessageParams>(
@@ -39,7 +35,8 @@ export const useConversationChat = (
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isLoading
+    isLoading,
+    prependIncomingMessage
   } = useListMessages({
     params,
     enabled: Boolean(conversation.id)
@@ -223,11 +220,6 @@ export const useConversationChat = (
         previousScrollTopRef.current = container.scrollTop
 
         fetchNextPage()
-          .then((result) => {
-            if (!result?.hasNextPage) {
-              hasNextPageRef.current = false
-            }
-          })
           .finally(() => {
             isFetchingNextPageRef.current = false
           })
@@ -253,8 +245,18 @@ export const useConversationChat = (
         conversationId: conversation.id,
         read_until: new Date().toISOString(),
         user_id: currentUserId
-      }).catch(console.error)
-    }, 600)
+      })
+        .then(() => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(
+              new CustomEvent('messenger:conversation-read', {
+                detail: { conversationId: conversation.id }
+              })
+            )
+          }
+        })
+        .catch(console.error)
+    }, 200)
   }, [conversation.id, currentUserId, markConversationAsRead])
 
   useEffect(() => {
@@ -273,29 +275,7 @@ export const useConversationChat = (
 
   const handleNewMessage = useCallback(
     (message: Message) => {
-      queryClient.setQueryData<
-        InfiniteData<AxiosResponse<ResponseApiMessage<ConversationMessage[]>>>
-      >(['list-messages', params], (oldData) => {
-        if (!oldData?.pages || oldData.pages.length === 0) return oldData
-        console.log("EJECUTADO")
-        const firstPage = oldData.pages[0]
-        const currentGroups = firstPage.data?.data ?? []
-        const updatedGroups = prependMessage(currentGroups, message)
-
-        return {
-          ...oldData,
-          pages: [
-            {
-              ...firstPage,
-              data: {
-                ...firstPage.data,
-                data: updatedGroups
-              }
-            },
-            ...oldData.pages.slice(1)
-          ]
-        }
-      })
+      prependIncomingMessage(message)
 
       const container = scrollRef.current
       if (container) {
@@ -317,12 +297,12 @@ export const useConversationChat = (
         currentUserId && String(message.attributes.sender_id) !== String(currentUserId)
 
       if (isFromOtherUser) {
-        playNotificationSound("focused")
+        playNotificationSound('focused')
       }
 
       scheduleMarkAsRead()
     },
-    [currentUserId, params, queryClient, scheduleMarkAsRead]
+    [currentUserId, prependIncomingMessage, scheduleMarkAsRead]
   )
 
   const handleTyping = useCallback(
@@ -474,19 +454,8 @@ export const useConversationChat = (
         })
 
       setPendingFile(null)
-      const refreshedMessages = await refetchMessages()
-      const allHistoryGroups =
-        refreshedMessages.data?.pages?.reduce<ConversationMessage[]>(
-          (acc, page) => mergeOlderGroups(acc, page.data?.data ?? []),
-          []
-        ) ?? []
-      const isConfirmed = allHistoryGroups.some((group) =>
-        group.messages.some((historyMessage) => historyMessage.id === message.id)
-      )
-
-      if (isConfirmed) {
-        setOptimisticMessages((current) => current.filter((item) => item.id !== optimisticId))
-      }
+      await refetchMessages()
+      setOptimisticMessages((current) => current.filter((item) => item.id !== optimisticId))
 
       scheduleMarkAsRead()
     } catch {

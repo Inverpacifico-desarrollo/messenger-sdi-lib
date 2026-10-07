@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import useListConversations from './api/conversations/use-list-conversations'
+import useMarkConversationAsRead from './api/conversations/use-mark-conversation-as-read'
 import { Conversation, FilterConversation, UnreadEvent } from '../types/conversation.types'
 import { subscribeToUser } from '../utils/reverb'
 import { toast } from 'sonner'
@@ -16,8 +16,8 @@ export interface UseConversationsPageOptions {
 export const useConversationsPage = ({
   showToastOnUnread = true
 }: UseConversationsPageOptions = {}) => {
-  const queryClient = useQueryClient()
   const { config, currentUser, currentUserId } = useChatContext()
+  const { mutateAsync: markConversationAsRead } = useMarkConversationAsRead()
 
   const hasReadPermission = useCheckHasPermissionMessenger({
     permission: ['messenger_chat.read']
@@ -47,8 +47,9 @@ export const useConversationsPage = ({
   }, [closedFilter, typeFilter, debouncedSearch, currentUserId])
 
   const {
-    data: conversations,
+    data: rawConversations,
     isLoading,
+    isFetching,
     errors,
     refetch: refetchConversations
   } = useListConversations({
@@ -60,6 +61,23 @@ export const useConversationsPage = ({
   const [isContextPanelOpen, setIsContextPanelOpen] = useState(false)
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false)
   const [isNewConversationOpen, setIsNewConversationOpen] = useState(false)
+
+  // Si la conversación está abierta/enfocada, aseguramos que visualmente tenga unread_count: 0
+  const conversations = useMemo(() => {
+    if (!selectedId) return rawConversations
+    return rawConversations.map((conv) => {
+      if (conv.id === selectedId && conv.attributes.unread_count > 0) {
+        return {
+          ...conv,
+          attributes: {
+            ...conv.attributes,
+            unread_count: 0
+          }
+        }
+      }
+      return conv
+    })
+  }, [rawConversations, selectedId])
 
   const handleUnreadUpdate = useCallback(
     (event: UnreadEvent) => {
@@ -87,16 +105,28 @@ export const useConversationsPage = ({
         playNotificationSound('unfocused')
       }
 
-      queryClient.invalidateQueries({ queryKey: ['list-conversations'] })
-      refetchConversations()
+      void refetchConversations()
     },
-    [currentUserId, queryClient, refetchConversations, selectedId, showToastOnUnread]
+    [currentUserId, refetchConversations, selectedId, showToastOnUnread]
   )
 
   const handleRealtimeConversationCreated = useCallback(() => {
-    queryClient.invalidateQueries({ queryKey: ['list-conversations'] })
-    refetchConversations()
-  }, [queryClient, refetchConversations])
+    void refetchConversations()
+  }, [refetchConversations])
+
+  // Escuchar cuando una conversación es marcada como leída para sincronizar la lista
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const handleConversationRead = () => {
+      void refetchConversations()
+    }
+
+    window.addEventListener('messenger:conversation-read', handleConversationRead)
+    return () => {
+      window.removeEventListener('messenger:conversation-read', handleConversationRead)
+    }
+  }, [refetchConversations])
 
   useEffect(() => {
     if (!currentUserId) return
@@ -114,10 +144,25 @@ export const useConversationsPage = ({
     [conversations, selectedId]
   )
 
-  const selectConversation = (id: string) => {
-    setSelectedId(id)
-    setIsMobileChatOpen(true)
-  }
+  const selectConversation = useCallback(
+    (id: string) => {
+      setSelectedId(id)
+      setIsMobileChatOpen(true)
+
+      if (id && currentUserId) {
+        void markConversationAsRead({
+          conversationId: id,
+          read_until: new Date().toISOString(),
+          user_id: currentUserId
+        })
+          .then(() => {
+            void refetchConversations()
+          })
+          .catch(console.error)
+      }
+    },
+    [currentUserId, markConversationAsRead, refetchConversations]
+  )
 
   const unselectConversation = () => {
     setSelectedId('')
@@ -130,8 +175,7 @@ export const useConversationsPage = ({
     setSelectedId(conversation.id)
     setIsMobileChatOpen(true)
     setIsNewConversationOpen(false)
-    queryClient.invalidateQueries({ queryKey: ['list-conversations'] })
-    refetchConversations()
+    void refetchConversations()
   }
 
   return {
@@ -149,6 +193,7 @@ export const useConversationsPage = ({
     isMobileChatOpen,
     isNewConversationOpen,
     isLoading,
+    isFetching,
     errors,
     hasReadPermission,
     currentUser,
