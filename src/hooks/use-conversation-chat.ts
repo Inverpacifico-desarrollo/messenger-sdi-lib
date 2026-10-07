@@ -15,6 +15,7 @@ import useCloseConversation from './api/conversations/use-close-conversation'
 import { toast } from 'sonner'
 import { subscribeToConversation } from '../utils/reverb'
 import { useChatContext } from '../context/chat-context'
+import { playNotificationSound } from '../utils/audio.util'
 
 export interface UseConversationChatOptions {
   onCloseSuccess?: () => void
@@ -276,7 +277,7 @@ export const useConversationChat = (
         InfiniteData<AxiosResponse<ResponseApiMessage<ConversationMessage[]>>>
       >(['list-messages', params], (oldData) => {
         if (!oldData?.pages || oldData.pages.length === 0) return oldData
-
+        console.log("EJECUTADO")
         const firstPage = oldData.pages[0]
         const currentGroups = firstPage.data?.data ?? []
         const updatedGroups = prependMessage(currentGroups, message)
@@ -312,9 +313,16 @@ export const useConversationChat = (
         }
       }
 
+      const isFromOtherUser =
+        currentUserId && String(message.attributes.sender_id) !== String(currentUserId)
+
+      if (isFromOtherUser) {
+        playNotificationSound("focused")
+      }
+
       scheduleMarkAsRead()
     },
-    [params, queryClient, scheduleMarkAsRead]
+    [currentUserId, params, queryClient, scheduleMarkAsRead]
   )
 
   const handleTyping = useCallback(
@@ -454,16 +462,16 @@ export const useConversationChat = (
     try {
       const message = file
         ? await uploadMessageFile({
-            conversationId: conversation.id,
-            file,
-            sender_id: Number(currentUser.id),
-            caption: caption || undefined
-          })
+          conversationId: conversation.id,
+          file,
+          sender_id: Number(currentUser.id),
+          caption: caption || undefined
+        })
         : await sendMessage({
-            body: caption,
-            conversationId: conversation.id,
-            sender_id: currentUser.id
-          })
+          body: caption,
+          conversationId: conversation.id,
+          sender_id: currentUser.id
+        })
 
       setPendingFile(null)
       const refreshedMessages = await refetchMessages()

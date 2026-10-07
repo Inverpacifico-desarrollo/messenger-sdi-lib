@@ -39,8 +39,15 @@ export {
 export { RequestSupportForm, type RequestSupportFormProps } from './components/request-support-form'
 
 // 3. Hooks Principales (para vistas embebidas personalizadas)
-export { default as useConversationsPage } from './hooks/use-conversations-page'
+export {
+  default as useConversationsPage,
+  type UseConversationsPageOptions
+} from './hooks/use-conversations-page'
 export { default as useConversationChat } from './hooks/use-conversation-chat'
+export {
+  default as useShowConversation,
+  type UseShowConversationOptions
+} from './hooks/use-show-conversation'
 
 // 4. Tipos de Dominio Esenciales
 export type {
@@ -65,3 +72,11 @@ export type {
   RequestChatSupportPayload,
   RequestChatSupportResponse
 } from './types/chat-support.types'
+
+// 5. Constantes & Utilidades
+export { LIB_VERSION } from './utils/version'
+export {
+  playNotificationSound,
+  type NotificationSoundType,
+  type PlaySoundOptions
+} from './utils/audio.util'

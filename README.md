@@ -114,6 +114,7 @@ import { FloatingChat } from 'messenger-sdi-lib'
 | `hideCondition` | `(pathname: string) => boolean` | `undefined` | Callback booleano para evaluar dinámicamente si ocultar. |
 | `currentPath` | `string` | `undefined` | *(Opcional)* Ruta activa forzada (ej. desde `usePathname()`). |
 | `hidden` | `boolean` | `false` | Forzar ocultamiento mediante booleano directo. |
+| `showToastOnUnread` | `boolean` | `false` | Activa o desactiva las alertas toast emergentes de mensajes no leídos (por defecto desactivado en el widget flotante). |
 
 ---
 
@@ -144,7 +145,9 @@ export function FullMessengerPage() {
     typeFilter,
     setTypeFilter,
     isLoading
-  } = useConversationsPage()
+  } = useConversationsPage({
+    showToastOnUnread: true // Alerta toast para mensajes en conversaciones no seleccionadas
+  })
 
   return (
     <div className="flex h-[calc(100vh-80px)] w-full gap-4 p-4">
@@ -179,7 +182,55 @@ export function FullMessengerPage() {
 
 ---
 
-## 🎛️ Componentes y Hooks Disponibles
+### C. Hook `useShowConversation` (Detalle de Conversación por ID)
+Obtén y suscríbete en tiempo real a una conversación específica mediante su ID:
+
+```tsx
+import { useShowConversation } from 'messenger-sdi-lib'
+
+export function ConversationView({ conversationId }: { conversationId: string }) {
+  const {
+    conversation,
+    isLoading,
+    isError,
+    errors,
+    refetch
+  } = useShowConversation(conversationId, {
+    showToastOnUnread: true,
+    onMessage: (msg) => console.log('Nuevo mensaje:', msg)
+  })
+
+  if (isLoading) return <div>Cargando conversación...</div>
+  if (isError || !conversation) return <div>Error al cargar conversación</div>
+
+  return (
+    <div>
+      <h2>{conversation.attributes.name}</h2>
+    </div>
+  )
+}
+```
+
+---
+
+## 🔊 4. Notificaciones de Sonido
+
+La librería incluye un sistema de notificaciones sonoras nativo (**Web Audio API**, sin dependencias de archivos `.mp3` externos):
+- **Tono Enfocado (`focused`)**: Tono suave cuando el usuario tiene la conversación abierta en pantalla.
+- **Tono No Enfocado (`unfocused`)**: Tono de alerta armónico de tres notas cuando el mensaje pertenece a otra conversación o la pestaña está en segundo plano.
+- **Anti-Saturación (Rate Limiting)**: Si llegan ráfagas de mensajes en menos de 1 segundo, el sonido se reproduce sólo una vez.
+
+Puedes disparar sonidos manualmente si lo requieres:
+```tsx
+import { playNotificationSound } from 'messenger-sdi-lib'
+
+playNotificationSound('focused')   // Tono suave
+playNotificationSound('unfocused') // Tono de alerta
+```
+
+---
+
+## 🎛️ 5. Componentes y Hooks Disponibles
 
 ### Componentes Exportados:
 - `ChatProvider`: Proveedor de contexto y cliente de consultas.
@@ -194,11 +245,16 @@ export function FullMessengerPage() {
 ### Hooks Exportados:
 - `useConversationsPage`: Gestiona estado de lista, filtros, búsqueda y selección.
 - `useConversationChat`: Gestiona mensajes, paginación, typing, archivos y cierre de conversación.
+- `useShowConversation`: Consulta y suscripción a una conversación puntual por ID.
 - `useChatContext`: Acceso a la configuración activa y usuario autenticado.
+
+### Utilidades y Constantes:
+- `playNotificationSound`: Reproductor de tonos de notificación con Web Audio API.
+- `LIB_VERSION`: Versión actual de la librería (inferida desde `package.json`).
 
 ---
 
-## 🌓 4. Modo Oscuro (Dark Mode)
+## 🌓 6. Modo Oscuro (Dark Mode)
 
 La librería detecta el modo oscuro automáticamente:
 1. Si el elemento `<html>` o `<body>` de tu app tiene la clase `dark`.

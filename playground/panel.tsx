@@ -27,7 +27,7 @@ export default function ConversationsPage() {
   } = useConversationsPage()
 
   return (
-    <div className='sdi-messenger-root flex h-[calc(100vh-115px)] max-h-[calc(100vh-115px)] w-full min-w-0 gap-3 overflow-hidden'>
+    <div className='sdi-messenger-root flex flex-1 h-full min-h-0 w-full min-w-0 gap-3 overflow-hidden'>
 
       <div
         className={`w-full md:w-82.5 lg:w-90 xl:w-95 shrink-0 h-full min-w-0 ${
