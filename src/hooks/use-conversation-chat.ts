@@ -277,7 +277,7 @@ export const useConversationChat = (
         InfiniteData<AxiosResponse<ResponseApiMessage<ConversationMessage[]>>>
       >(['list-messages', params], (oldData) => {
         if (!oldData?.pages || oldData.pages.length === 0) return oldData
-
+        console.log("EJECUTADO")
         const firstPage = oldData.pages[0]
         const currentGroups = firstPage.data?.data ?? []
         const updatedGroups = prependMessage(currentGroups, message)
@@ -317,11 +317,7 @@ export const useConversationChat = (
         currentUserId && String(message.attributes.sender_id) !== String(currentUserId)
 
       if (isFromOtherUser) {
-        const isFocused =
-          typeof document !== 'undefined' &&
-          document.hasFocus() &&
-          !document.hidden
-        playNotificationSound(isFocused ? 'focused' : 'unfocused')
+        playNotificationSound("focused")
       }
 
       scheduleMarkAsRead()
@@ -466,16 +462,16 @@ export const useConversationChat = (
     try {
       const message = file
         ? await uploadMessageFile({
-            conversationId: conversation.id,
-            file,
-            sender_id: Number(currentUser.id),
-            caption: caption || undefined
-          })
+          conversationId: conversation.id,
+          file,
+          sender_id: Number(currentUser.id),
+          caption: caption || undefined
+        })
         : await sendMessage({
-            body: caption,
-            conversationId: conversation.id,
-            sender_id: currentUser.id
-          })
+          body: caption,
+          conversationId: conversation.id,
+          sender_id: currentUser.id
+        })
 
       setPendingFile(null)
       const refreshedMessages = await refetchMessages()
