@@ -7,6 +7,7 @@ import { subscribeToConversation, subscribeToUser } from '../utils/reverb'
 import { toast } from 'sonner'
 import { useChatContext } from '../context/chat-context'
 import { useCheckHasPermissionMessenger } from './use-check-has-permission-messenger'
+import { playNotificationSound } from '../utils/audio.util'
 
 export interface UseShowConversationOptions {
   conversationId?: string | number
@@ -60,12 +61,23 @@ export const useShowConversation = (
 
   const handleMessage = useCallback(
     (message: Message) => {
+      const isFromOtherUser =
+        currentUserId && String(message.attributes.sender_id) !== String(currentUserId)
+
+      if (isFromOtherUser) {
+        const isFocused =
+          typeof document !== 'undefined' &&
+          document.hasFocus() &&
+          !document.hidden
+        playNotificationSound(isFocused ? 'focused' : 'unfocused')
+      }
+
       queryClient.invalidateQueries({ queryKey: ['conversation', conversationIdStr] })
       queryClient.invalidateQueries({ queryKey: ['list-conversations'] })
       refetch()
       onMessage?.(message)
     },
-    [conversationIdStr, onMessage, queryClient, refetch]
+    [conversationIdStr, currentUserId, onMessage, queryClient, refetch]
   )
 
 

@@ -15,6 +15,7 @@ import useCloseConversation from './api/conversations/use-close-conversation'
 import { toast } from 'sonner'
 import { subscribeToConversation } from '../utils/reverb'
 import { useChatContext } from '../context/chat-context'
+import { playNotificationSound } from '../utils/audio.util'
 
 export interface UseConversationChatOptions {
   onCloseSuccess?: () => void
@@ -312,9 +313,20 @@ export const useConversationChat = (
         }
       }
 
+      const isFromOtherUser =
+        currentUserId && String(message.attributes.sender_id) !== String(currentUserId)
+
+      if (isFromOtherUser) {
+        const isFocused =
+          typeof document !== 'undefined' &&
+          document.hasFocus() &&
+          !document.hidden
+        playNotificationSound(isFocused ? 'focused' : 'unfocused')
+      }
+
       scheduleMarkAsRead()
     },
-    [params, queryClient, scheduleMarkAsRead]
+    [currentUserId, params, queryClient, scheduleMarkAsRead]
   )
 
   const handleTyping = useCallback(

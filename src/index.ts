@@ -75,3 +75,8 @@ export type {
 
 // 5. Constantes & Utilidades
 export { LIB_VERSION } from './utils/version'
+export {
+  playNotificationSound,
+  type NotificationSoundType,
+  type PlaySoundOptions
+} from './utils/audio.util'
