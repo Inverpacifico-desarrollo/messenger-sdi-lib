@@ -12,7 +12,7 @@ export declare const useShowConversation: (param?: string | number | UseShowConv
     isLoading: boolean;
     isError: boolean;
     errors: any;
-    refetch: (options?: import('@tanstack/query-core').RefetchOptions) => Promise<import('@tanstack/query-core').QueryObserverResult<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<Conversation>, any, {}, any>, Error>>;
+    refetch: () => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<Conversation>, any, {}, any> | undefined>;
     hasReadPermission: boolean;
     currentUser: import('..').UserChat | null;
     currentUserId: string;

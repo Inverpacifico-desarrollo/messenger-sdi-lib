@@ -1,75 +1,17 @@
-import { UseMutationOptions } from '@tanstack/react-query';
-export declare function useMutate<TData = unknown, TError = Error, TVariables = void, TContext = unknown>(mutationFn: (variables: TVariables) => Promise<TData>, options?: Omit<UseMutationOptions<TData, TError, TVariables, TContext>, 'mutationFn'>): {
+export interface UseMutateOptions<TData = unknown, TError = Error, TVariables = void> {
+    onSuccess?: (data: TData, variables: TVariables) => void | Promise<void>;
+    onError?: (error: TError, variables: TVariables) => void | Promise<void>;
+    onSettled?: (data: TData | undefined, error: TError | null, variables: TVariables) => void | Promise<void>;
+}
+export declare function useMutate<TData = unknown, TError = Error, TVariables = void>(mutationFn: (variables: TVariables) => Promise<TData>, options?: UseMutateOptions<TData, TError, TVariables>): {
+    data: TData | undefined;
+    error: TError | null;
+    isPending: boolean;
     isLoading: boolean;
-    data: undefined;
-    variables: undefined;
-    error: null;
-    isError: false;
-    isIdle: true;
-    isPending: false;
-    isSuccess: false;
-    status: "idle";
-    mutate: import('@tanstack/react-query').UseMutateFunction<TData, TError, TVariables, TContext>;
+    isSuccess: boolean;
+    isError: boolean;
     reset: () => void;
-    context: TContext | undefined;
-    failureCount: number;
-    failureReason: TError | null;
-    isPaused: boolean;
-    submittedAt: number;
-    mutateAsync: import('@tanstack/react-query').UseMutateAsyncFunction<TData, TError, TVariables, TContext>;
-} | {
-    isLoading: boolean;
-    data: undefined;
-    variables: TVariables;
-    error: null;
-    isError: false;
-    isIdle: false;
-    isPending: true;
-    isSuccess: false;
-    status: "pending";
-    mutate: import('@tanstack/react-query').UseMutateFunction<TData, TError, TVariables, TContext>;
-    reset: () => void;
-    context: TContext | undefined;
-    failureCount: number;
-    failureReason: TError | null;
-    isPaused: boolean;
-    submittedAt: number;
-    mutateAsync: import('@tanstack/react-query').UseMutateAsyncFunction<TData, TError, TVariables, TContext>;
-} | {
-    isLoading: boolean;
-    data: undefined;
-    error: TError;
-    variables: TVariables;
-    isError: true;
-    isIdle: false;
-    isPending: false;
-    isSuccess: false;
-    status: "error";
-    mutate: import('@tanstack/react-query').UseMutateFunction<TData, TError, TVariables, TContext>;
-    reset: () => void;
-    context: TContext | undefined;
-    failureCount: number;
-    failureReason: TError | null;
-    isPaused: boolean;
-    submittedAt: number;
-    mutateAsync: import('@tanstack/react-query').UseMutateAsyncFunction<TData, TError, TVariables, TContext>;
-} | {
-    isLoading: boolean;
-    data: TData;
-    error: null;
-    variables: TVariables;
-    isError: false;
-    isIdle: false;
-    isPending: false;
-    isSuccess: true;
-    status: "success";
-    mutate: import('@tanstack/react-query').UseMutateFunction<TData, TError, TVariables, TContext>;
-    reset: () => void;
-    context: TContext | undefined;
-    failureCount: number;
-    failureReason: TError | null;
-    isPaused: boolean;
-    submittedAt: number;
-    mutateAsync: import('@tanstack/react-query').UseMutateAsyncFunction<TData, TError, TVariables, TContext>;
+    mutate: (variables: TVariables, callOptions?: UseMutateOptions<TData, TError, TVariables>) => void;
+    mutateAsync: (variables: TVariables) => Promise<TData>;
 };
 export default useMutate;

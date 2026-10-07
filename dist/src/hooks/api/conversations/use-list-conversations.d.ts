@@ -15,7 +15,8 @@ declare const useListConversations: (props?: Props) => {
         next: string | null;
     }> | undefined;
     isLoading: boolean;
+    isFetching: boolean;
     errors: any;
-    refetch: (options?: import('@tanstack/query-core').RefetchOptions) => Promise<import('@tanstack/query-core').QueryObserverResult<AxiosResponse<ResponseAPI<Conversation[]>, any, {}, any>, Error>>;
+    refetch: () => Promise<AxiosResponse<ResponseAPI<Conversation[]>, any, {}, any> | undefined>;
 };
 export default useListConversations;

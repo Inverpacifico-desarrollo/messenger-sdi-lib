@@ -1,8 +1,9 @@
 import { Conversation } from '../types/conversation.types';
 export interface UseConversationsPageOptions {
     showToastOnUnread?: boolean;
+    isActive?: boolean;
 }
-export declare const useConversationsPage: ({ showToastOnUnread }?: UseConversationsPageOptions) => {
+export declare const useConversationsPage: ({ showToastOnUnread, isActive }?: UseConversationsPageOptions) => {
     conversations: Conversation[];
     selectedId: string;
     setSelectedId: import('react').Dispatch<import('react').SetStateAction<string>>;
@@ -17,6 +18,7 @@ export declare const useConversationsPage: ({ showToastOnUnread }?: UseConversat
     isMobileChatOpen: boolean;
     isNewConversationOpen: boolean;
     isLoading: boolean;
+    isFetching: boolean;
     errors: any;
     hasReadPermission: boolean;
     currentUser: import('..').UserChat | null;

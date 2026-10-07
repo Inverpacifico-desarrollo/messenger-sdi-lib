@@ -1,6 +1,5 @@
-import { InfiniteData } from '@tanstack/react-query';
 import { AxiosResponse } from 'axios';
-import { ConversationMessage, MessageParams } from '../../../types/message.types';
+import { ConversationMessage, Message, MessageParams } from '../../../types/message.types';
 import { ResponseApiMessage } from '../../../types/api.types';
 interface Props {
     params: MessageParams;
@@ -8,15 +7,16 @@ interface Props {
 }
 declare const useListMessages: ({ params, enabled }: Props) => {
     data: ConversationMessage[];
-    rawPages: AxiosResponse<ResponseApiMessage<ConversationMessage[]>, any, {}, any>[] | undefined;
+    rawPages: AxiosResponse<ResponseApiMessage<ConversationMessage[]>, any, {}, any>[];
     isLoading: boolean;
     isPending: boolean;
     isFetching: boolean;
     isFetchingNextPage: boolean;
     hasNextPage: boolean;
-    fetchNextPage: (options?: import('@tanstack/query-core').FetchNextPageOptions) => Promise<import('@tanstack/query-core').InfiniteQueryObserverResult<InfiniteData<AxiosResponse<ResponseApiMessage<ConversationMessage[]>, any, {}, any>, unknown>, unknown>>;
+    fetchNextPage: () => Promise<void>;
     errors: any;
-    refetch: (options?: import('@tanstack/query-core').RefetchOptions) => Promise<import('@tanstack/query-core').QueryObserverResult<InfiniteData<AxiosResponse<ResponseApiMessage<ConversationMessage[]>, any, {}, any>, unknown>, unknown>>;
+    refetch: () => Promise<void>;
+    prependIncomingMessage: (message: Message) => void;
     meta: {
         path: string;
         per_page: number;
