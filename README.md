@@ -1,27 +1,35 @@
 # SDI Messenger Library (`messenger-sdi-lib`)
 
-Librería de componentes React para mensajería y chat de soporte en tiempo real (con soporte para Laravel Reverb / Pusher WebSockets), diseñada para funcionar de forma transparente y aislada en cualquier proyecto **React / Next.js (App Router & Pages)**.
+Librería de componentes React para mensajería y chat de soporte en tiempo real (con soporte para Laravel Reverb / Pusher WebSockets), diseñada para funcionar de forma transparente, ultraligera y 100% aislada en cualquier proyecto **React / Next.js (App Router & Pages)**.
 
 ---
 
 ## ✨ Características Principales
 
-- **⚡ Cero Configuración Extra:** Maneja su propio `QueryClientProvider` internamente de forma 100% aislada. No requiere que configures TanStack React Query en tu proyecto anfitrión.
+- **⚡ 100% Libre de Conflictos (Zero Dependencies de Estado Externo):** Construida con hooks nativos de React (`useState`, `useEffect`, `useCallback`, `useRef`). **No requiere ni utiliza React Query**, eliminando cualquier riesgo de colisión de versiones con React Query v4, v5, SWR, Redux o RTK Query en tu aplicación anfitriona.
+- **🔄 Sincronización Reactiva en Tiempo Real:** Integración nativa con Laravel Reverb / Pusher. Actualización instantánea de nuevos mensajes, indicadores de lectura, tipografía (*typing*), creación y cierre de conversaciones.
 - **🛡️ Compatibilidad SSR / Next.js:** Incluye directivas `'use client'` y polyfills seguros para evaluación en servidor durante Server-Side Rendering (SSR).
-- **🎨 Aislamiento de Estilos Garantizado:** Todos los estilos CSS están encapsulados bajo `.sdi-messenger-root` con Tailwind CSS v4, evitando colisiones con los estilos o clases globales de tu app.
+- **🎨 Aislamiento de Estilos Garantizado:** Todos los estilos CSS están encapsulados bajo el namespace `.sdi-messenger-root` con Tailwind CSS v4, evitando colisiones con los estilos o clases globales de tu app.
 - **🗺️ Detección de Rutas en Tiempo Real:** Detección instantánea de cambios de URL en SPAs (Next.js `<Link>`, `router.push`, React Router) para ocultar o mostrar el chat flotante dinámicamente sin recargar la página.
-- **🔒 Bloqueo en Conversaciones Cerradas:** Deshabilita el compositor de texto/archivos con aviso de candado al interactuar con conversaciones finalizadas y regresa limpiamente a la lista al cerrarlas.
-- **💬 Vistas Flexibles:** Widget flotante (FAB) o componentes independientes para crear vistas a pantalla completa / paneles laterales.
+- **🔊 Sistema de Sonidos Nativos:** Notificaciones auditivas mediante **Web Audio API** (sin descargas de archivos `.mp3`), con tonos diferenciados para conversaciones enfocadas vs. no enfocadas y protección anti-ráfagas.
+- **🔒 Bloqueo en Conversaciones Cerradas:** Deshabilita el compositor de texto/archivos con aviso visual de candado al interactuar con conversaciones finalizadas y sincroniza el estado automáticamente.
+- **💬 Vistas Flexibles:** Widget flotante completo (FAB) o componentes independientes para crear vistas a pantalla completa / paneles embebidos.
 
 ---
 
 ## 📦 Instalación
 
-### Opción A: Desde archivo empaquetado local (`.tgz`)
+### Opción A: Desde repositorio Git / Tag
 ```bash
 npm install https://github.com/Inverpacifico-desarrollo/messenger-sdi-lib.git#lib
 ```
 
+### Opción B: Desde paquete comprimido local (`.tgz`)
+```bash
+npm install ../ruta-a/messenger-sdi-lib-1.2.2.tgz
+```
+
+---
 
 ## 🚀 Requisitos Previos
 
@@ -97,6 +105,7 @@ import { FloatingChat } from 'messenger-sdi-lib'
   canViewChatList={true}
   canRequestSupport={true}
   hiddenPaths={['/messenger', '/login']} // Ocultar automáticamente en estas rutas
+  showToastOnUnread={false}             // Notificaciones toast (opcional)
 />
 ```
 
@@ -114,7 +123,7 @@ import { FloatingChat } from 'messenger-sdi-lib'
 | `hideCondition` | `(pathname: string) => boolean` | `undefined` | Callback booleano para evaluar dinámicamente si ocultar. |
 | `currentPath` | `string` | `undefined` | *(Opcional)* Ruta activa forzada (ej. desde `usePathname()`). |
 | `hidden` | `boolean` | `false` | Forzar ocultamiento mediante booleano directo. |
-| `showToastOnUnread` | `boolean` | `false` | Activa o desactiva las alertas toast emergentes de mensajes no leídos (por defecto desactivado en el widget flotante). |
+| `showToastOnUnread` | `boolean` | `false` | Activa o desactiva las alertas toast emergentes de mensajes no leídos. |
 
 ---
 
@@ -129,6 +138,7 @@ import {
   ConversationsSidebarList,
   ConversationChatPanel,
   ConversationEmptyState,
+  NewConversationDialog,
   useConversationsPage
 } from 'messenger-sdi-lib'
 
@@ -144,9 +154,13 @@ export function FullMessengerPage() {
     setClosedFilter,
     typeFilter,
     setTypeFilter,
+    isNewConversationOpen,
+    setIsNewConversationOpen,
+    handleConversationCreated,
     isLoading
   } = useConversationsPage({
-    showToastOnUnread: true // Alerta toast para mensajes en conversaciones no seleccionadas
+    showToastOnUnread: true,
+    isActive: true // Mantiene activa la sincronización en pantalla completa
   })
 
   return (
@@ -163,6 +177,7 @@ export function FullMessengerPage() {
           onClosedFilterChange={setClosedFilter}
           typeFilter={typeFilter}
           onTypeFilterChange={setTypeFilter}
+          onNewConversation={() => setIsNewConversationOpen(true)}
           isLoading={isLoading}
         />
       </div>
@@ -172,9 +187,18 @@ export function FullMessengerPage() {
         {selectedConversation ? (
           <ConversationChatPanel conversation={selectedConversation} />
         ) : (
-          <ConversationEmptyState />
+          <ConversationEmptyState
+            onNewConversation={() => setIsNewConversationOpen(true)}
+          />
         )}
       </div>
+
+      {/* Modal para Nueva Conversación */}
+      <NewConversationDialog
+        open={isNewConversationOpen}
+        onOpenChange={setIsNewConversationOpen}
+        onSuccess={handleConversationCreated}
+      />
     </div>
   )
 }
@@ -216,8 +240,8 @@ export function ConversationView({ conversationId }: { conversationId: string })
 ## 🔊 4. Notificaciones de Sonido
 
 La librería incluye un sistema de notificaciones sonoras nativo (**Web Audio API**, sin dependencias de archivos `.mp3` externos):
-- **Tono Enfocado (`focused`)**: Tono suave cuando el usuario tiene la conversación abierta en pantalla.
-- **Tono No Enfocado (`unfocused`)**: Tono de alerta armónico de tres notas cuando el mensaje pertenece a otra conversación o la pestaña está en segundo plano.
+- **Tono Enfocado (`focused`)**: Tono suave cuando el usuario tiene la conversación abierta y visible en pantalla.
+- **Tono No Enfocado (`unfocused`)**: Tono de alerta armónico de tres notas cuando el mensaje pertenece a otra conversación o el chat está cerrado/en segundo plano.
 - **Anti-Saturación (Rate Limiting)**: Si llegan ráfagas de mensajes en menos de 1 segundo, el sonido se reproduce sólo una vez.
 
 Puedes disparar sonidos manualmente si lo requieres:
@@ -233,24 +257,25 @@ playNotificationSound('unfocused') // Tono de alerta
 ## 🎛️ 5. Componentes y Hooks Disponibles
 
 ### Componentes Exportados:
-- `ChatProvider`: Proveedor de contexto y cliente de consultas.
-- `FloatingChat`: Widget de chat flotante completo.
-- `ConversationChatPanel`: Panel activo de mensajes, cabecera y compositor.
-- `ConversationsSidebarList`: Lista lateral filtrable con pestañas y buscador.
+- `ChatProvider`: Proveedor de contexto y configuración del chat.
+- `FloatingChat`: Widget de chat flotante completo con soporte técnico y navegación.
+- `ConversationChatPanel`: Panel activo de mensajes, scroll infinito, cabecera y compositor multimedia.
+- `ConversationsSidebarList`: Lista lateral filtrable con pestañas (Todas, Directas, Grupos, Bot) y buscador.
 - `ConversationEmptyState`: Vista de estado vacío cuando no hay chat seleccionado.
-- `ConversationContextPanel`: Panel lateral con detalles y participantes.
+- `ConversationContextPanel`: Panel lateral con detalles y participantes de la conversación.
 - `NewConversationDialog`: Modal para iniciar conversaciones directas o grupales.
 - `RequestSupportForm`: Formulario para crear solicitudes de asistencia técnica.
 
 ### Hooks Exportados:
-- `useConversationsPage`: Gestiona estado de lista, filtros, búsqueda y selección.
-- `useConversationChat`: Gestiona mensajes, paginación, typing, archivos y cierre de conversación.
+- `useConversationsPage`: Gestiona estado de lista, filtros, búsqueda, selección y sincronización de mensajes no leídos.
+- `useConversationChat`: Gestiona mensajes, paginación hacia arriba, escritura en vivo (*typing*), archivos, optimismo y cierre de conversación.
 - `useShowConversation`: Consulta y suscripción a una conversación puntual por ID.
 - `useChatContext`: Acceso a la configuración activa y usuario autenticado.
+- `useOptionalChatContext`: Acceso seguro al contexto opcional (retorna `null` si está fuera del provider).
 
 ### Utilidades y Constantes:
 - `playNotificationSound`: Reproductor de tonos de notificación con Web Audio API.
-- `LIB_VERSION`: Versión actual de la librería (inferida desde `package.json`).
+- `LIB_VERSION`: Versión actual de la librería (`1.2.2`, inferida automáticamente desde `package.json`).
 
 ---
 
