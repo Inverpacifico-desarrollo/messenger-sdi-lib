@@ -41,6 +41,10 @@ export { RequestSupportForm, type RequestSupportFormProps } from './components/r
 // 3. Hooks Principales (para vistas embebidas personalizadas)
 export { default as useConversationsPage } from './hooks/use-conversations-page'
 export { default as useConversationChat } from './hooks/use-conversation-chat'
+export {
+  default as useShowConversation,
+  type UseShowConversationOptions
+} from './hooks/use-show-conversation'
 
 // 4. Tipos de Dominio Esenciales
 export type {
