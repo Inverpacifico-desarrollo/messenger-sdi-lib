@@ -27,7 +27,7 @@ export default function ConversationsPage() {
     goBackToConversationList,
     handleConversationCreated
   } = useConversationsPage()
-  console.log({ activeChat })
+
   return (
     <div className='sdi-messenger-root flex flex-1 h-full min-h-0 w-full min-w-0 gap-3 overflow-hidden'>
 

@@ -65,6 +65,13 @@ export {
   type UseShowConversationOptions
 } from './hooks/use-show-conversation'
 export { default as useCloseConversation } from './hooks/api/conversations/use-close-conversation'
+export {
+  useCheckHasPermissionMessenger,
+  hasMessengerPermission,
+  type CheckMessengerPermissionParams,
+  type PermissionOperator
+} from './hooks/use-check-has-permission-messenger'
+export type { PermissionsMessenger } from './types/permission.types'
 
 // 4. Tipos de Dominio Esenciales
 export type {
