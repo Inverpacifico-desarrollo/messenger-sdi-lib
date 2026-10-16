@@ -1,5 +1,6 @@
 import { default as React } from 'react';
 import { Conversation } from '../types/conversation.types';
+import { ConversationChatHeaderRenderOptions } from './conversation-chat-header';
 export interface ConversationChatPanelProps {
     conversation: Conversation;
     onToggleContextPanel?: () => void;
@@ -12,5 +13,6 @@ export interface ConversationChatPanelProps {
     readOnly?: boolean;
     readOnlyMessage?: string;
     showComposer?: boolean;
+    renderOptions?: ConversationChatHeaderRenderOptions;
 }
-export declare function ConversationChatPanel({ conversation, onToggleContextPanel, isContextPanelOpen, onBack, alwaysShowBackButton, onCloseSuccess, showHeader, showWallpaper, readOnly, readOnlyMessage, showComposer }: ConversationChatPanelProps): React.JSX.Element;
+export declare function ConversationChatPanel({ conversation, onToggleContextPanel, isContextPanelOpen, onBack, alwaysShowBackButton, onCloseSuccess, showHeader, showWallpaper, readOnly, readOnlyMessage, showComposer, renderOptions }: ConversationChatPanelProps): React.JSX.Element;

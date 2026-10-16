@@ -10,8 +10,8 @@ export declare const useConversationsPage: ({ showToastOnUnread, isActive }?: Us
     selectedConversation: Conversation | undefined;
     closedFilter: "0" | "1";
     setClosedFilter: import('react').Dispatch<import('react').SetStateAction<"0" | "1">>;
-    typeFilter: "group" | "bot" | "direct" | "all";
-    setTypeFilter: import('react').Dispatch<import('react').SetStateAction<"group" | "bot" | "direct" | "all">>;
+    typeFilter: "bot" | "direct" | "group" | "all";
+    setTypeFilter: import('react').Dispatch<import('react').SetStateAction<"bot" | "direct" | "group" | "all">>;
     searchQuery: string;
     setSearchQuery: import('react').Dispatch<import('react').SetStateAction<string>>;
     isContextPanelOpen: boolean;

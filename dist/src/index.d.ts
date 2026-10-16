@@ -1,6 +1,8 @@
 export { ChatProvider, useChatContext, useOptionalChatContext, type ChatConfig, type ChatContextValue, type ChatProviderProps } from './context/chat-context';
+export { ActiveConversationProvider, useActiveConversation, useRequiredActiveConversation, activeConversationStore, type ActiveConversationContextValue, type ActiveConversationProviderProps } from './context/active-conversation-context';
 export { FloatingChat, type FloatingChatProps, type FloatingChatView, type FloatingChatCorner } from './components/floating-chat';
 export { ConversationChatPanel, type ConversationChatPanelProps } from './components/conversation-chat-panel';
+export { ConversationChatHeader, type ConversationChatHeaderProps, type ConversationChatHeaderRenderOptions, type ConversationRenderOptions } from './components/conversation-chat-header';
 export { ConversationEmptyState } from './components/conversation-empty-state';
 export { ConversationContextPanel } from './components/conversation-context-panel';
 export { ConversationsSidebarList, type ConversationsSidebarListProps } from './components/conversations-sidebar-list';
@@ -9,9 +11,13 @@ export { RequestSupportForm, type RequestSupportFormProps } from './components/r
 export { default as useConversationsPage, type UseConversationsPageOptions } from './hooks/use-conversations-page';
 export { default as useConversationChat } from './hooks/use-conversation-chat';
 export { default as useShowConversation, type UseShowConversationOptions } from './hooks/use-show-conversation';
+export { default as useCloseConversation } from './hooks/api/conversations/use-close-conversation';
+export { useCheckHasPermissionMessenger, hasMessengerPermission, type CheckMessengerPermissionParams, type PermissionOperator } from './hooks/use-check-has-permission-messenger';
+export type { PermissionsMessenger } from './types/permission.types';
 export type { Conversation, ConversationType, CreateConversationPayload, TypingEvent, UnreadEvent } from './types/conversation.types';
 export type { Message, MessageAttachment, MessageType, CreateMessagePayload, UploadMessageFilePayload } from './types/message.types';
 export type { UserChat } from './types/user-chat.types';
 export type { RequestChatSupportPayload, RequestChatSupportResponse } from './types/chat-support.types';
 export { LIB_VERSION } from './utils/version';
+export { closeConversationService } from './services/conversation.services';
 export { playNotificationSound, type NotificationSoundType, type PlaySoundOptions } from './utils/audio.util';
