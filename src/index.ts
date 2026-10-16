@@ -10,6 +10,15 @@ export {
   type ChatProviderProps
 } from './context/chat-context'
 
+export {
+  ActiveConversationProvider,
+  useActiveConversation,
+  useRequiredActiveConversation,
+  activeConversationStore,
+  type ActiveConversationContextValue,
+  type ActiveConversationProviderProps
+} from './context/active-conversation-context'
+
 // 2. Componentes Principales
 export {
   FloatingChat,
@@ -55,6 +64,7 @@ export {
   default as useShowConversation,
   type UseShowConversationOptions
 } from './hooks/use-show-conversation'
+export { default as useCloseConversation } from './hooks/api/conversations/use-close-conversation'
 
 // 4. Tipos de Dominio Esenciales
 export type {
@@ -82,6 +92,7 @@ export type {
 
 // 5. Constantes & Utilidades
 export { LIB_VERSION } from './utils/version'
+export { closeConversationService } from './services/conversation.services'
 export {
   playNotificationSound,
   type NotificationSoundType,

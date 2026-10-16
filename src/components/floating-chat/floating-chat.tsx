@@ -9,6 +9,7 @@ import { NewConversationDialog } from '../new-conversation-dialog'
 import useConversationsPage from '../../hooks/use-conversations-page'
 import useRequestChatSupport from '../../hooks/api/use-request-chat-support'
 import { useChatContext } from '../../context/chat-context'
+import { activeConversationStore } from '../../context/active-conversation-context'
 import { useCheckHasPermissionMessenger } from '../../hooks/use-check-has-permission-messenger'
 import type { Conversation } from '../../types/conversation.types'
 import type {
@@ -39,7 +40,8 @@ export function FloatingChat({
   hidden = false,
   currentPath,
   showToastOnUnread = false,
-  renderOptions
+  renderOptions,
+  onActiveConversationChange
 }: FloatingChatProps) {
   // Verificación de permisos de Messenger
   const hasReadChat = useCheckHasPermissionMessenger({
@@ -142,6 +144,19 @@ export function FloatingChat({
     initialConversation ||
     selectedConversation ||
     null
+
+  const currentChatConversation = isOpen && currentView === 'chat' ? activeConversation : null
+
+  useEffect(() => {
+    activeConversationStore.set(currentChatConversation)
+    onActiveConversationChange?.(currentChatConversation)
+  }, [currentChatConversation, onActiveConversationChange])
+
+  useEffect(() => {
+    return () => {
+      activeConversationStore.set(null)
+    }
+  }, [])
 
   useEffect(() => {
     if (currentView === 'chat' && !activeConversation) {

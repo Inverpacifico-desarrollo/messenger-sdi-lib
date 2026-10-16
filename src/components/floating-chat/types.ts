@@ -52,4 +52,8 @@ export interface FloatingChatProps {
    * Opciones de renderizado para los componentes internos del chat (ej: customHeaderButtons).
    */
   renderOptions?: ConversationChatHeaderRenderOptions
+  /**
+   * Callback que notifica cuando la conversación activa cambia (o se deselecciona / cierra).
+   */
+  onActiveConversationChange?: (conversation: Conversation | null) => void
 }
