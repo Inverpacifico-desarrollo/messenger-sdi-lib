@@ -38,7 +38,8 @@ export function FloatingChat({
   hideCondition,
   hidden = false,
   currentPath,
-  showToastOnUnread = false
+  showToastOnUnread = false,
+  renderOptions
 }: FloatingChatProps) {
   // Verificación de permisos de Messenger
   const hasReadChat = useCheckHasPermissionMessenger({
@@ -361,6 +362,7 @@ export function FloatingChat({
                     conversation={activeConversation}
                     isContextPanelOpen={false}
                     alwaysShowBackButton={true}
+                    renderOptions={renderOptions}
                     onCloseSuccess={() => {
                       setCustomActiveConversation(null)
                       if (effectiveCanViewChatList) {

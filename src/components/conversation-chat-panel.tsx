@@ -1,7 +1,10 @@
 import React, { useRef, useState } from 'react'
 import type { Conversation } from '../types/conversation.types'
 import useConversationChat from '../hooks/use-conversation-chat'
-import { ConversationChatHeader } from './conversation-chat-header'
+import {
+  ConversationChatHeader,
+  type ConversationChatHeaderRenderOptions
+} from './conversation-chat-header'
 import { ConversationMessagesList } from './conversation-messages-list'
 import { ConversationComposer } from './conversation-composer'
 import { ChatWallpaper } from './chat-wallpaper'
@@ -19,6 +22,7 @@ export interface ConversationChatPanelProps {
   readOnly?: boolean
   readOnlyMessage?: string
   showComposer?: boolean
+  renderOptions?: ConversationChatHeaderRenderOptions
 }
 
 export function ConversationChatPanel({
@@ -32,7 +36,8 @@ export function ConversationChatPanel({
   showWallpaper = true,
   readOnly = false,
   readOnlyMessage,
-  showComposer = true
+  showComposer = true,
+  renderOptions
 }: ConversationChatPanelProps) {
   const chat = useConversationChat(conversation, {
     onCloseSuccess: () => {
@@ -130,6 +135,7 @@ export function ConversationChatPanel({
           onToggleContextPanel={onToggleContextPanel}
           onBack={onBack}
           alwaysShowBackButton={alwaysShowBackButton}
+          renderOptions={renderOptions}
         />
       )}
 

@@ -23,6 +23,13 @@ export {
   type ConversationChatPanelProps
 } from './components/conversation-chat-panel'
 
+export {
+  ConversationChatHeader,
+  type ConversationChatHeaderProps,
+  type ConversationChatHeaderRenderOptions,
+  type ConversationRenderOptions
+} from './components/conversation-chat-header'
+
 export { ConversationEmptyState } from './components/conversation-empty-state'
 export { ConversationContextPanel } from './components/conversation-context-panel'
 
