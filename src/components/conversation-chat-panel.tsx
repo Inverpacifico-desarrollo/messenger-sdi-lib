@@ -1,7 +1,11 @@
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import type { Conversation } from '../types/conversation.types'
 import useConversationChat from '../hooks/use-conversation-chat'
-import { ConversationChatHeader } from './conversation-chat-header'
+import {
+  ConversationChatHeader,
+  type ConversationChatHeaderRenderOptions
+} from './conversation-chat-header'
+import { ActiveConversationProvider, activeConversationStore } from '../context/active-conversation-context'
 import { ConversationMessagesList } from './conversation-messages-list'
 import { ConversationComposer } from './conversation-composer'
 import { ChatWallpaper } from './chat-wallpaper'
@@ -19,6 +23,7 @@ export interface ConversationChatPanelProps {
   readOnly?: boolean
   readOnlyMessage?: string
   showComposer?: boolean
+  renderOptions?: ConversationChatHeaderRenderOptions
 }
 
 export function ConversationChatPanel({
@@ -32,7 +37,8 @@ export function ConversationChatPanel({
   showWallpaper = true,
   readOnly = false,
   readOnlyMessage,
-  showComposer = true
+  showComposer = true,
+  renderOptions
 }: ConversationChatPanelProps) {
   const chat = useConversationChat(conversation, {
     onCloseSuccess: () => {
@@ -110,15 +116,35 @@ export function ConversationChatPanel({
     }
   }
 
+  const activeConversationValue = useMemo(
+    () => ({
+      conversation,
+      isClosed: chat.isClosed,
+      isClosing: chat.isClosing,
+      handleCloseConversation: chat.handleCloseConversation
+    }),
+    [conversation, chat.isClosed, chat.isClosing, chat.handleCloseConversation]
+  )
+
+  useEffect(() => {
+    activeConversationStore.set(conversation)
+    return () => {
+      activeConversationStore.set(null)
+    }
+  }, [conversation])
+
+
+
   return (
-    <div
-      className='sdi-messenger-root relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      onPaste={handlePaste}
-    >
+    <ActiveConversationProvider value={activeConversationValue}>
+      <div
+        className='sdi-messenger-root relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onPaste={handlePaste}
+      >
       {/* Cabecera del Chat Activo */}
       {showHeader && (
         <ConversationChatHeader
@@ -130,6 +156,7 @@ export function ConversationChatPanel({
           onToggleContextPanel={onToggleContextPanel}
           onBack={onBack}
           alwaysShowBackButton={alwaysShowBackButton}
+          renderOptions={renderOptions}
         />
       )}
 
@@ -204,5 +231,6 @@ export function ConversationChatPanel({
         )}
       </div>
     </div>
-  )
+  </ActiveConversationProvider>
+)
 }

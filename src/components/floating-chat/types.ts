@@ -1,5 +1,6 @@
 import type React from 'react'
 import type { Conversation } from '../../types/conversation.types'
+import type { ConversationChatHeaderRenderOptions } from '../conversation-chat-header'
 
 export type FloatingChatView = 'home' | 'support-form' | 'no-technician' | 'list' | 'chat'
 export type FloatingChatCorner = 'bottom-right' | 'bottom-left' | 'top-right' | 'top-left'
@@ -47,4 +48,12 @@ export interface FloatingChatProps {
    * Por defecto: false (el widget flotante ya dispone de badges e indicadores visuales).
    */
   showToastOnUnread?: boolean
+  /**
+   * Opciones de renderizado para los componentes internos del chat (ej: customHeaderButtons).
+   */
+  renderOptions?: ConversationChatHeaderRenderOptions
+  /**
+   * Callback que notifica cuando la conversación activa cambia (o se deselecciona / cierra).
+   */
+  onActiveConversationChange?: (conversation: Conversation | null) => void
 }

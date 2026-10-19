@@ -10,6 +10,15 @@ export {
   type ChatProviderProps
 } from './context/chat-context'
 
+export {
+  ActiveConversationProvider,
+  useActiveConversation,
+  useRequiredActiveConversation,
+  activeConversationStore,
+  type ActiveConversationContextValue,
+  type ActiveConversationProviderProps
+} from './context/active-conversation-context'
+
 // 2. Componentes Principales
 export {
   FloatingChat,
@@ -22,6 +31,13 @@ export {
   ConversationChatPanel,
   type ConversationChatPanelProps
 } from './components/conversation-chat-panel'
+
+export {
+  ConversationChatHeader,
+  type ConversationChatHeaderProps,
+  type ConversationChatHeaderRenderOptions,
+  type ConversationRenderOptions
+} from './components/conversation-chat-header'
 
 export { ConversationEmptyState } from './components/conversation-empty-state'
 export { ConversationContextPanel } from './components/conversation-context-panel'
@@ -48,6 +64,14 @@ export {
   default as useShowConversation,
   type UseShowConversationOptions
 } from './hooks/use-show-conversation'
+export { default as useCloseConversation } from './hooks/api/conversations/use-close-conversation'
+export {
+  useCheckHasPermissionMessenger,
+  hasMessengerPermission,
+  type CheckMessengerPermissionParams,
+  type PermissionOperator
+} from './hooks/use-check-has-permission-messenger'
+export type { PermissionsMessenger } from './types/permission.types'
 
 // 4. Tipos de Dominio Esenciales
 export type {
@@ -75,6 +99,7 @@ export type {
 
 // 5. Constantes & Utilidades
 export { LIB_VERSION } from './utils/version'
+export { closeConversationService } from './services/conversation.services'
 export {
   playNotificationSound,
   type NotificationSoundType,

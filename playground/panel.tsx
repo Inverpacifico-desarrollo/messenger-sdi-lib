@@ -1,10 +1,12 @@
 'use client'
 
-import { ConversationChatPanel, ConversationEmptyState, ConversationsSidebarList, NewConversationDialog, useConversationsPage } from "@/index"
+import { ConversationChatPanel, ConversationEmptyState, ConversationsSidebarList, NewConversationDialog, useActiveConversation, useConversationsPage } from "@/index"
 
 
 
 export default function ConversationsPage() {
+
+  const activeChat = useActiveConversation()
   const {
     conversations,
     selectedId,
@@ -30,9 +32,8 @@ export default function ConversationsPage() {
     <div className='sdi-messenger-root flex flex-1 h-full min-h-0 w-full min-w-0 gap-3 overflow-hidden'>
 
       <div
-        className={`w-full md:w-82.5 lg:w-90 xl:w-95 shrink-0 h-full min-w-0 ${
-          isMobileChatOpen ? 'hidden md:flex' : 'flex'
-        }`}
+        className={`w-full md:w-82.5 lg:w-90 xl:w-95 shrink-0 h-full min-w-0 ${isMobileChatOpen ? 'hidden md:flex' : 'flex'
+          }`}
       >
         <ConversationsSidebarList
           conversations={conversations}
@@ -51,9 +52,8 @@ export default function ConversationsPage() {
 
       {/* Columna Central: Chat Activo (visible en móvil si el chat está abierto) */}
       <div
-        className={`flex-1 min-w-0 h-full ${
-          !isMobileChatOpen ? 'hidden md:flex' : 'flex'
-        }`}
+        className={`flex-1 min-w-0 h-full ${!isMobileChatOpen ? 'hidden md:flex' : 'flex'
+          }`}
       >
         {selectedConversation ? (
           <ConversationChatPanel

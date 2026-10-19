@@ -17,7 +17,13 @@ import {
 import { BtnCloseConversation } from './btn-close-conversation'
 import { useChatContext } from '../context/chat-context'
 
-interface ConversationChatHeaderProps {
+export interface ConversationChatHeaderRenderOptions {
+  customHeaderButtons?: React.ReactNode
+}
+
+export type ConversationRenderOptions = ConversationChatHeaderRenderOptions
+
+export interface ConversationChatHeaderProps {
   conversation: Conversation
   isClosed: boolean
   isClosing?: boolean
@@ -26,6 +32,7 @@ interface ConversationChatHeaderProps {
   onToggleContextPanel?: () => void
   onBack?: () => void
   alwaysShowBackButton?: boolean
+  renderOptions?: ConversationChatHeaderRenderOptions
 }
 
 export function ConversationChatHeader({
@@ -36,7 +43,8 @@ export function ConversationChatHeader({
   isContextPanelOpen = true,
   onToggleContextPanel,
   onBack,
-  alwaysShowBackButton = false
+  alwaysShowBackButton = false,
+  renderOptions,
 }: ConversationChatHeaderProps) {
   const { currentUserId } = useChatContext()
   const isGroup = isGroupConversation(conversation)
@@ -102,13 +110,17 @@ export function ConversationChatHeader({
 
       {/* Acciones Rápidas del Agente */}
       <div className='flex items-center gap-1 shrink-0'>
-        <BtnCloseConversation
-          conversation={conversation}
-          isClosed={isClosed}
-          isClosing={isClosing}
-          onCloseConversation={onCloseConversation}
-          showResolvedBadge={false}
-        />
+        {renderOptions?.customHeaderButtons !== undefined ? (
+          renderOptions.customHeaderButtons
+        ) : (
+          <BtnCloseConversation
+            conversation={conversation}
+            isClosed={isClosed}
+            isClosing={isClosing}
+            onCloseConversation={onCloseConversation}
+            showResolvedBadge={false}
+          />
+        )}
 
         {onToggleContextPanel && (
           <Button
