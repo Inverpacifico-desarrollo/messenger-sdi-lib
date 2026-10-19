@@ -1,6 +1,10 @@
 import { default as React } from 'react';
 import { Conversation } from '../types/conversation.types';
-interface ConversationChatHeaderProps {
+export interface ConversationChatHeaderRenderOptions {
+    customHeaderButtons?: React.ReactNode;
+}
+export type ConversationRenderOptions = ConversationChatHeaderRenderOptions;
+export interface ConversationChatHeaderProps {
     conversation: Conversation;
     isClosed: boolean;
     isClosing?: boolean;
@@ -9,6 +13,6 @@ interface ConversationChatHeaderProps {
     onToggleContextPanel?: () => void;
     onBack?: () => void;
     alwaysShowBackButton?: boolean;
+    renderOptions?: ConversationChatHeaderRenderOptions;
 }
-export declare function ConversationChatHeader({ conversation, isClosed, isClosing, onCloseConversation, isContextPanelOpen, onToggleContextPanel, onBack, alwaysShowBackButton }: ConversationChatHeaderProps): React.JSX.Element;
-export {};
+export declare function ConversationChatHeader({ conversation, isClosed, isClosing, onCloseConversation, isContextPanelOpen, onToggleContextPanel, onBack, alwaysShowBackButton, renderOptions, }: ConversationChatHeaderProps): React.JSX.Element;
