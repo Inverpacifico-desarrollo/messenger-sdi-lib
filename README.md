@@ -13,6 +13,7 @@ Librería de componentes React para mensajería y chat de soporte en tiempo real
 - **🗺️ Detección de Rutas en Tiempo Real:** Detección instantánea de cambios de URL en SPAs (Next.js `<Link>`, `router.push`, React Router) para ocultar o mostrar el chat flotante dinámicamente sin recargar la página.
 - **🔊 Sistema de Sonidos Nativos:** Notificaciones auditivas mediante **Web Audio API** (sin descargas de archivos `.mp3`), con tonos diferenciados para conversaciones enfocadas vs. no enfocadas y protección anti-ráfagas.
 - **🤖 Asistente Virtual IA (Bot SDI) Integrado:** Creación automática de sesiones de triaje con IA, persistencia automática de `session_uuid` por conversación, botones de acción interactivos (`action_buttons`), escalamiento a técnico en vivo o cola de espera (`in_queue`) y modal de calificación por estrellas (1 a 5) al resolver tickets.
+- **🎙️ Llamada Telefónica Interactiva con Asistente de Voz (HU-14.2):** Modal interactivo de llamada full-duplex con el Asistente Virtual de Voz (`VoiceCallDialog`), visualizador de ondas de audio senoidales responsivo en HTML5 Canvas (`VoiceWaveformCanvas`), simulación de turnos conversacionales y amplitudes, transcripción continua en vivo, badges de contexto POS y controles de Mute y Finalización.
 - **📝 Renderizado y Editor de Texto Enriquecido (HTML WYSIWYG):** Soporte seguro (XSS-safe) en burbujas de mensaje para etiquetas HTML de texto enriquecido (`<b>`, `<strong>`, `<i>`, `<em>`, `<u>`, `<s>`, `<del>`, `<ul>`, `<ol>`, `<li>`, `<pre>`, `<code>`, `<table>`, `<blockquote>`, `<a href>`), bloques de código con botón de copiado y enlaces seguros, acompañado de un editor visual `contentEditable` en el compositor sin sintaxis Markdown.
 - **🔒 Bloqueo en Conversaciones Cerradas:** Deshabilita el compositor de texto/archivos con aviso visual de candado al interactuar con conversaciones finalizadas y sincroniza el estado automáticamente.
 - **💬 Vistas Flexibles:** Widget flotante completo (FAB) o componentes independientes para crear vistas a pantalla completa / paneles embebidos.
@@ -578,7 +579,38 @@ El compositor de mensajes incorpora un editor visual enriquecido (`contentEditab
 
 ---
 
-## 🔊 7. Notificaciones de Sonido
+## 🎙️ 8. Llamada Telefónica con Asistente Virtual de Voz (HU-14.2)
+
+Permite sostener una llamada telefónica interactiva con el Asistente Virtual de Voz en canales de triaje y resolución de fallas POS / impresoras:
+
+- **Acceso desde Cabecera**: En conversaciones con el Bot IA aparece el botón verde **"Llamar"** con icono de teléfono (`Phone`) en la cabecera del chat.
+- **Visualizador Reactivo en Canvas (`<VoiceWaveformCanvas />`)**: Animación senoidal de tres capas armónicas en HTML5 Canvas con escalado Retina/High-DPI y ventana gaussiana en los extremos. Reacciona en tiempo real según el estado:
+  - `speaking`: Oscilación pronunciada con tonos azules y violetas simulando la voz del asistente.
+  - `listening`: Onda suave en color esmeralda al detectar entrada del usuario o esperar respuesta.
+  - `muted`: Línea tenue en color ámbar/rojo con amplitud atenuada.
+  - `connecting` / `requesting_permission`: Pulso de baja intensidad.
+- **Badges de Contexto Operativo**: Muestra chips de contexto cargados desde el evento `session.ready` (Terminal POS, Ticket asignado, ID de sesión UUID).
+- **Transcripción Continua en Vivo**: Panel colapsable con burbujas de transcripción para el Asistente y la Asesora, actualizándose en tiempo real.
+- **Simulación Interactiva (`MockVoiceCallDriver`)**: Incluye un simulador con saludo inicial en menos de 2 segundos, turnos conversacionales realistas, modulación de amplitud para el canvas, heartbeat keepalive cada 20 segundos y opción de simular habla del usuario desde el campo de prueba.
+- **Preparado para Gateway WebSocket**: Función `buildVoiceWebSocketUrl` configurada para conectar a `ws://<HOST_VOICE_SERVICE>:8095/ws/voice/call?session_id=...` con downsampling 16kHz / reproducción 24kHz.
+
+```tsx
+import { VoiceCallDialog } from 'messenger-sdi-lib'
+
+<VoiceCallDialog
+  open={isVoiceCallOpen}
+  onOpenChange={setIsVoiceCallOpen}
+  sessionId={sessionId}
+  conversationId={conversation.id}
+  userId={currentUserId}
+  senderMessengerId={currentUserId}
+  onCallEnded={() => console.log('Llamada finalizada')}
+/>
+```
+
+---
+
+## 🔊 9. Notificaciones de Sonido
 
 La librería incluye un sistema de notificaciones sonoras nativo (**Web Audio API**, sin dependencias de archivos `.mp3` externos):
 - **Tono Enfocado (`focused`)**: Tono suave cuando el usuario tiene la conversación abierta y visible en pantalla.
@@ -595,7 +627,7 @@ playNotificationSound('unfocused') // Tono de alerta
 
 ---
 
-## 🎛️ 8. Componentes, Hooks y Tipos Disponibles
+## 🎛️ 10. Componentes, Hooks y Tipos Disponibles
 
 ### Componentes Exportados:
 - `ChatProvider`: Proveedor de contexto y configuración del chat.
@@ -610,6 +642,8 @@ playNotificationSound('unfocused') // Tono de alerta
 - `EscalateSupportDialog`: Modal para escalar conversación del Bot IA a técnico o gestionar la fila de espera (`in_queue`).
 - `ResolveSupportDialog`: Modal de calificación de 1 a 5 estrellas y comentarios para dar por resuelta la atención del Bot IA.
 - `MessageRichText`: Renderizador seguro de etiquetas HTML y texto enriquecido para mensajes.
+- `VoiceCallDialog`: Diálogo modal de llamada interactiva con el Asistente Virtual de Voz.
+- `VoiceWaveformCanvas`: Visualizador animado de ondas de audio senoidales en HTML5 Canvas.
 - `RequestSupportForm`: Formulario tradicional para crear solicitudes de asistencia técnica.
 
 ### Hooks Exportados:
@@ -634,6 +668,8 @@ playNotificationSound('unfocused') // Tono de alerta
 - `requestChatSupportService`, `escalateChatSupportService`, `resolveChatSupportService`: Servicios HTTP para flujos de soporte y bot.
 - `chatBotQueueStatusService`: Servicio HTTP para consulta de estado de cola (`GET /api/v1/chat-bot/queue-status?session_id=...`).
 - `chatBotQueueToTicketService`: Servicio HTTP para bypass de cola a ticket (`POST /api/v1/chat-bot/queue-to-ticket?session_id=...`).
+- `buildVoiceWebSocketUrl`: Constructor de URLs seguras para el canal WebSocket de llamadas de voz.
+- `MockVoiceCallDriver`: Driver de simulación interactiva con soporte de estados, amplitudes, turnos y keepalive.
 - `saveConversationSessionId`, `getConversationSessionId`, `removeConversationSessionId`: Utilidades de almacenamiento local para gestionar el `session_uuid` asociado a cada conversación.
 - `sanitizeUrl`: Validador seguro de URLs (`http:`, `https:`, `mailto:`).
 - `playNotificationSound`: Reproductor de tonos de notificación con Web Audio API.
@@ -643,14 +679,15 @@ playNotificationSound('unfocused') // Tono de alerta
 - **Conversaciones:** `Conversation`, `ConversationType`, `CreateConversationPayload`, `TypingEvent`, `UnreadEvent`.
 - **Mensajes:** `Message`, `MessageAttachment`, `MessageType`, `MessageActionButton`, `MessageMetadata`, `CreateMessagePayload`, `UploadMessageFilePayload`.
 - **Usuarios & Soporte / Bot IA:** `UserChat`, `RequestChatSupportPayload`, `RequestChatSupportResponse`, `EscalateChatSupportPayload`, `EscalateChatSupportResponse`, `ResolveChatSupportPayload`, `ResolveChatSupportResponse`, `ChatBotQueueStatusResponse`, `ChatBotQueueToTicketPayload`, `ChatBotQueueToTicketResponse`.
+- **Llamada de Voz (HU-14.2):** `VoiceCallState`, `VoiceCallContextBadges`, `VoiceTranscriptItem`, `VoiceClientCommand`, `VoiceServerEvent`, `VoiceConnectionParams`, `VoiceCallDriverListeners`.
 - **Permisos:** `PermissionsMessenger`, `CheckMessengerPermissionParams`, `PermissionOperator`.
 - **Cabecera & Personalización:** `ConversationChatHeaderRenderOptions`, `ConversationRenderOptions`, `ActiveConversationContextValue`, `ActiveConversationProviderProps`.
-- **Props de Componentes:** `FloatingChatProps`, `FloatingChatView`, `FloatingChatCorner`, `ConversationChatPanelProps`, `ConversationChatHeaderProps`, `ConversationsSidebarListProps`, `NewConversationDialogProps`, `EscalateSupportDialogProps`, `ResolveSupportDialogProps`, `MessageRichTextProps`, `RequestSupportFormProps`.
+- **Props de Componentes:** `FloatingChatProps`, `FloatingChatView`, `FloatingChatCorner`, `ConversationChatPanelProps`, `ConversationChatHeaderProps`, `ConversationsSidebarListProps`, `NewConversationDialogProps`, `EscalateSupportDialogProps`, `ResolveSupportDialogProps`, `VoiceCallDialogProps`, `VoiceWaveformCanvasProps`, `MessageRichTextProps`, `RequestSupportFormProps`.
 - **Configuración & Contextos:** `ChatConfig`, `ChatContextValue`, `ChatProviderProps`.
 
 ---
 
-## 🌓 9. Modo Oscuro (Dark Mode)
+## 🌓 11. Modo Oscuro (Dark Mode)
 
 La librería detecta el modo oscuro automáticamente:
 1. Si el elemento `<html>` o `<body>` de tu app tiene la clase `dark`.

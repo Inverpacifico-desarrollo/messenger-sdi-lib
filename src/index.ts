@@ -68,6 +68,16 @@ export {
   type MessageRichTextProps
 } from './components/message-rich-text'
 
+export {
+  VoiceCallDialog,
+  type VoiceCallDialogProps
+} from './components/voice/voice-call-dialog'
+
+export {
+  VoiceWaveformCanvas,
+  type VoiceWaveformCanvasProps
+} from './components/voice/voice-waveform-canvas'
+
 export { RequestSupportForm, type RequestSupportFormProps } from './components/request-support-form'
 
 // 3. Hooks Principales (para vistas embebidas personalizadas)
@@ -88,6 +98,11 @@ export {
   type UseShowConversationOptions
 } from './hooks/use-show-conversation'
 export { default as useCloseConversation } from './hooks/api/conversations/use-close-conversation'
+export {
+  useVoiceMicrophone,
+  type UseVoiceMicrophoneOptions,
+  type UseVoiceMicrophoneReturn
+} from './hooks/use-voice-microphone'
 export {
   useCheckHasPermissionMessenger,
   hasMessengerPermission,
@@ -129,6 +144,22 @@ export type {
   ChatBotQueueToTicketResponse
 } from './types/chat-support.types'
 
+export type {
+  VoiceCallState,
+  VoiceCallContextBadges,
+  VoiceTranscriptItem,
+  VoiceClientPingCommand,
+  VoiceClientMuteCommand,
+  VoiceClientHangupCommand,
+  VoiceClientCommand,
+  VoiceSessionReadyEvent,
+  VoiceAssistantSpeakingEvent,
+  VoiceAssistantTurnCompleteEvent,
+  VoiceAssistantTranscriptEvent,
+  VoiceServerEvent,
+  VoiceConnectionParams
+} from './types/voice.types'
+
 // 5. Constantes & Utilidades
 export { LIB_VERSION } from './utils/version'
 export { closeConversationService } from './services/conversation.services'
@@ -139,6 +170,11 @@ export {
   chatBotQueueStatusService,
   chatBotQueueToTicketService
 } from './services/chat-support.services'
+export {
+  buildVoiceWebSocketUrl,
+  MockVoiceCallDriver,
+  type VoiceCallDriverListeners
+} from './services/voice.service'
 export {
   saveConversationSessionId,
   getConversationSessionId,

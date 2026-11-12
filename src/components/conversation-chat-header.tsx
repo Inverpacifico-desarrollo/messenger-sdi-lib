@@ -7,7 +7,7 @@ import {
   Button,
   cn
 } from '../ui'
-import { Info, ArrowLeft, Lock, Sparkles } from 'lucide-react'
+import { Info, ArrowLeft, Lock, Sparkles, Phone } from 'lucide-react'
 import type { Conversation } from '../types/conversation.types'
 import {
   getConversationName,
@@ -35,6 +35,7 @@ export interface ConversationChatHeaderProps {
   onBack?: () => void
   alwaysShowBackButton?: boolean
   renderOptions?: ConversationChatHeaderRenderOptions
+  onStartVoiceCall?: () => void
 }
 
 export function ConversationChatHeader({
@@ -47,6 +48,7 @@ export function ConversationChatHeader({
   onBack,
   alwaysShowBackButton = false,
   renderOptions,
+  onStartVoiceCall
 }: ConversationChatHeaderProps) {
   const { currentUserId } = useChatContext()
   const isGroup = isGroupConversation(conversation)
@@ -122,6 +124,20 @@ export function ConversationChatHeader({
 
       {/* Acciones Rápidas del Agente */}
       <div className='flex items-center gap-1 shrink-0'>
+        {isBot && !isClosed && onStartVoiceCall && (
+          <Button
+            variant='outline'
+            size='sm'
+            onClick={onStartVoiceCall}
+            title='Llamar al Asistente de Voz (Interactivo)'
+            aria-label='Llamar al Asistente de Voz'
+            className='h-8 px-2 gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/30 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white hover:border-emerald-600 transition-all cursor-pointer'
+          >
+            <Phone className='size-3.5' />
+            <span className='hidden sm:inline'>Llamar</span>
+          </Button>
+        )}
+
         {renderOptions?.customHeaderButtons !== undefined ? (
           renderOptions.customHeaderButtons
         ) : (

@@ -20,6 +20,7 @@ import { ConversationComposer } from './conversation-composer'
 import { ChatWallpaper } from './chat-wallpaper'
 import { EscalateSupportDialog } from './escalate-support-dialog'
 import { ResolveSupportDialog } from './resolve-support-dialog'
+import { VoiceCallDialog } from './voice/voice-call-dialog'
 import {
   getConversationSessionId,
   removeConversationSessionId,
@@ -66,6 +67,7 @@ export function ConversationChatPanel({
   const [isResolvedLocal, setIsResolvedLocal] = useState(false)
   const [queueResponse, setQueueResponse] = useState<EscalateChatSupportResponse | null>(null)
   const [isWaitingInQueue, setIsWaitingInQueue] = useState(false)
+  const [isVoiceCallOpen, setIsVoiceCallOpen] = useState(false)
 
   const {
     mutateAsync: escalateSupport,
@@ -415,6 +417,7 @@ return (
           onBack={onBack}
           alwaysShowBackButton={alwaysShowBackButton}
           renderOptions={renderOptions}
+          onStartVoiceCall={() => setIsVoiceCallOpen(true)}
         />
       )}
 
@@ -527,6 +530,15 @@ return (
         (resolveError as any)?.response?.data?.message ||
         (resolveError as any)?.message
       }
+    />
+
+    <VoiceCallDialog
+      open={isVoiceCallOpen}
+      onOpenChange={setIsVoiceCallOpen}
+      sessionId={resolveCurrentSessionId()}
+      conversationId={conversation.id}
+      userId={chat.currentUserId || ''}
+      senderMessengerId={chat.currentUserId || ''}
     />
   </ActiveConversationProvider>
 )
