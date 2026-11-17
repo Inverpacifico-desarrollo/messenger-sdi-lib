@@ -1,0 +1,7 @@
+import { Conversation, ConversationTypingPayload, CreateConversationPayload, FilterConversation, MarkConversationAsReadPayload } from '../types/conversation.types';
+export declare const listConversationsService: (params: FilterConversation) => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<Conversation[]>, any, {}, any>>;
+export declare const createConversationService: (data: CreateConversationPayload) => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<Conversation>, any, {}, any>>;
+export declare const getConversationService: (conversationId: string) => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<Conversation>, any, {}, any>>;
+export declare const markConversationAsReadService: ({ conversationId, read_until, user_id }: MarkConversationAsReadPayload) => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<Conversation>, any, {}, any>>;
+export declare const updateConversationTypingService: ({ conversationId, user_id, is_typing }: ConversationTypingPayload) => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<Record<string, never>>, any, {}, any>>;
+export declare const closeConversationService: (conversationId: string) => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<Conversation>, any, {}, any>>;

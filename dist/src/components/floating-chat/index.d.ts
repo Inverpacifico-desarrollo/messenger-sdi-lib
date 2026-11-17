@@ -1,0 +1,11 @@
+export * from './floating-chat';
+export * from './types';
+export * from './hooks/use-floating-chat-drag';
+export * from './hooks/use-floating-chat-visibility';
+export * from './components/floating-chat-button';
+export * from './components/floating-chat-home-view';
+export * from './components/floating-chat-form-view';
+export * from './components/floating-chat-list-view';
+export * from './components/floating-chat-skeleton';
+export * from './components/floating-chat-error-view';
+export { FloatingChat as default } from './floating-chat';
