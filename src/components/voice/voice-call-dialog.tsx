@@ -247,17 +247,7 @@ export function VoiceCallDialog({
           <div className='flex items-center justify-between p-5 pb-3 border-b border-neutral-100 bg-white'>
             <div className='flex items-center gap-3'>
               {/* Avatar Bot Circular Violeta */}
-              <div className='relative shrink-0'>
-                <div className='flex size-11 items-center justify-center rounded-full bg-violet-600 text-white shadow-xs'>
-                  <Bot className='size-6' />
-                </div>
-                <span
-                  className={cn(
-                    'absolute bottom-0 right-0 size-3 rounded-full ring-2 ring-white',
-                    isConnecting ? 'bg-blue-500 animate-ping' : 'bg-emerald-500 animate-pulse'
-                  )}
-                />
-              </div>
+
 
               {/* Título y Subtítulo */}
               <div className='flex flex-col'>
@@ -279,12 +269,7 @@ export function VoiceCallDialog({
                       EN VIVO
                     </span>
                   )}
-                  {contextBadges?.ticketNumber && !isConnecting && !isEnded && (
-                    <span className='inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/80'>
-                      <Ticket className='size-2.5 text-amber-500' />
-                      <span>Ticket #{contextBadges.ticketNumber}</span>
-                    </span>
-                  )}
+
                 </div>
                 <p className='text-xs text-neutral-400 mt-0.5'>
                   {isEnded
@@ -334,23 +319,7 @@ export function VoiceCallDialog({
                 onClick={hasPermission === false ? () => requestMicrophone() : undefined}
                 title={hasPermission === false ? 'Haz clic para permitir acceso al micrófono' : undefined}
               >
-                <div
-                  className={cn(
-                    'relative flex size-11 items-center justify-center rounded-full shadow-2xs transition-all',
-                    hasPermission === false
-                      ? 'bg-amber-50 border border-amber-200 text-amber-600 ring-4 ring-amber-500/10'
-                      : 'bg-emerald-50/90 border border-emerald-200/70 text-emerald-600 ring-4 ring-emerald-500/10'
-                  )}
-                >
-                  {hasPermission === false ? (
-                    <MicOff className='size-5 text-amber-600' />
-                  ) : (
-                    <Ear className='size-5 text-emerald-600' />
-                  )}
-                  {hasPermission !== false && !isMuted && audioLevel > 0.08 && (
-                    <span className='absolute inset-0 rounded-full bg-emerald-500/25 animate-ping' />
-                  )}
-                </div>
+
                 <div className='flex flex-col'>
                   <span
                     className={cn(
