@@ -48,8 +48,6 @@ export function VoiceCallDialog({
   })
 
 
-  console.log(voice)
-
   if (!open) return null
 
   return (

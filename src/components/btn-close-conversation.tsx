@@ -47,16 +47,15 @@ export function BtnCloseConversation({
 
   if (isClosed && showResolvedBadge) {
     return (
-      <Badge
-        variant='outline'
+      <div
         className={cn(
-          'h-8 px-2.5 text-xs text-neutral-500 dark:text-neutral-400 bg-neutral-100/60 dark:bg-neutral-800/60 border-neutral-200 dark:border-neutral-800 gap-1 select-none',
+          'inline-flex h-8 items-center gap-1.5 rounded-lg border border-neutral-200/90 dark:border-neutral-700/80 bg-neutral-100/60 dark:bg-neutral-800/60 px-2.5 sm:px-3 text-xs font-medium text-neutral-500 dark:text-neutral-400 select-none shadow-2xs',
           className
         )}
       >
         <CheckCircle2 className='size-3.5 text-emerald-500' />
-        <span className='hidden sm:inline-block'>Resuelta</span>
-      </Badge>
+        <span className='hidden sm:inline-block tracking-tight'>Resuelta</span>
+      </div>
     )
   }
 
@@ -70,29 +69,30 @@ export function BtnCloseConversation({
 
   return (
     <>
-      <Button
-        variant='success'
-        size='sm'
+      <button
+        type='button'
         disabled={isClosing}
         onClick={() => setIsConfirmOpen(true)}
+        title='Cerrar y marcar conversación como resuelta'
+        aria-label='Cerrar conversación'
         className={cn(
-          'h-8 gap-1 px-2 sm:px-3 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer shadow-xs',
+          'group inline-flex h-8 items-center gap-1.5 rounded-lg border border-neutral-200/90 dark:border-neutral-700/80 bg-white dark:bg-neutral-800/90 px-2.5 sm:px-3 text-xs font-semibold text-neutral-700 dark:text-neutral-200 shadow-2xs transition-all hover:border-emerald-300 dark:hover:border-emerald-700/70 hover:bg-emerald-50/50 dark:hover:bg-emerald-950/20 hover:text-emerald-700 dark:hover:text-emerald-300 active:scale-[0.98] cursor-pointer disabled:pointer-events-none disabled:opacity-50',
           className
         )}
         {...props}
       >
         {isClosing ? (
           <>
-            <Loader2 className='size-3.5 animate-spin' />
-            <span className='hidden sm:inline-block'>Cerrando...</span>
+            <Loader2 className='size-3.5 animate-spin text-neutral-500' />
+            <span className='hidden sm:inline-block tracking-tight'>Cerrando...</span>
           </>
         ) : (
           <>
-            <CheckCircle2 className='size-3.5' />
-            <span className='hidden sm:inline-block'>Cerrar chat</span>
+            <CheckCircle2 className='size-3.5 text-emerald-600 dark:text-emerald-400 transition-transform duration-200 group-hover:scale-110' />
+            <span className='hidden sm:inline-block tracking-tight'>Cerrar chat</span>
           </>
         )}
-      </Button>
+      </button>
 
       <AlertDialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
         <AlertDialogContent className='sm:max-w-md p-5'>

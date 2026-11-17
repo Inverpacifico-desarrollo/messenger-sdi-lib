@@ -1,8 +1,7 @@
 'use client'
 
-import React from 'react'
-import { Mic, MicOff, Minimize2, PhoneOff, Send, ShieldCheck } from 'lucide-react'
-// import { Camera, Loader2, Monitor } from 'lucide-react'
+import React, { useRef } from 'react'
+import { Camera, Loader2, Mic, MicOff, Minimize2, Monitor, PhoneOff, Send, ShieldCheck } from 'lucide-react'
 import { cn } from '../../ui'
 
 export interface VoiceCallControlsProps {
@@ -27,13 +26,16 @@ export function VoiceCallControls({
   hasPermission,
   userRms,
   textInput,
+  isCapturingScreen = false,
   onTextInputChange,
   onSendTextPrompt,
+  onCaptureScreen,
+  onPhotoUpload,
   onHeroMicClick,
   onMinimize,
   onHangup
 }: VoiceCallControlsProps) {
-  // const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const isBlocked = hasPermission === false
 
   return (
@@ -43,7 +45,6 @@ export function VoiceCallControls({
         onSubmit={onSendTextPrompt}
         className='mx-5 mb-2 flex items-center gap-1.5 rounded-2xl border border-neutral-200 bg-white px-2.5 py-2 shadow-2xs focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500/15 transition-all'
       >
-        {/*
         <button
           type='button'
           onClick={() => fileInputRef.current?.click()}
@@ -76,7 +77,6 @@ export function VoiceCallControls({
           className='hidden'
           onChange={onPhotoUpload}
         />
-        */}
 
         <input
           type='text'

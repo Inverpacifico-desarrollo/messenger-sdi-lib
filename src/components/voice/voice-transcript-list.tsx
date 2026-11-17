@@ -175,12 +175,6 @@ export function VoiceTranscriptList({
                     >
                       <p className='whitespace-pre-wrap break-words'>
                         {item.text}
-                        {isBot && !item.isFinal && (
-                          <span
-                            className='inline-block w-1.5 h-3.5 ml-1 bg-violet-500 animate-pulse align-middle rounded-xs'
-                            aria-hidden='true'
-                          />
-                        )}
                       </p>
                       <div
                         className={
