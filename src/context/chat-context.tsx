@@ -15,6 +15,11 @@ export interface ChatConfig {
    * o abre el formulario directo a técnico (false). Por defecto: true.
    */
   supportWithBot?: boolean
+  /**
+   * URL WebSocket explícita para el gateway de voz (opcional).
+   * Si no se especifica, se deriva automáticamente desde `apiBaseUrl`.
+   */
+  voiceWsUrl?: string
   reverb: {
     key: string
     host: string

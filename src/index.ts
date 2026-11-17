@@ -74,9 +74,44 @@ export {
 } from './components/voice/voice-call-dialog'
 
 export {
+  VoiceCallHeader,
+  type VoiceCallHeaderProps
+} from './components/voice/voice-call-header'
+
+export {
+  VoiceAudioVisualizerCard,
+  type VoiceAudioVisualizerCardProps
+} from './components/voice/voice-audio-visualizer-card'
+
+export {
   VoiceWaveformCanvas,
   type VoiceWaveformCanvasProps
 } from './components/voice/voice-waveform-canvas'
+
+export {
+  VoiceTranscriptList,
+  type VoiceTranscriptListProps
+} from './components/voice/voice-transcript-list'
+
+export {
+  VoiceCallControls,
+  type VoiceCallControlsProps
+} from './components/voice/voice-call-controls'
+
+export {
+  VoiceCallConnecting,
+  type VoiceCallConnectingProps
+} from './components/voice/voice-call-connecting'
+
+export {
+  VoiceCallEndedSummary,
+  type VoiceCallEndedSummaryProps
+} from './components/voice/voice-call-ended-summary'
+
+export {
+  VoiceMinimizedIsland,
+  type VoiceMinimizedIslandProps
+} from './components/voice/voice-minimized-island'
 
 export { RequestSupportForm, type RequestSupportFormProps } from './components/request-support-form'
 
@@ -98,6 +133,10 @@ export {
   type UseShowConversationOptions
 } from './hooks/use-show-conversation'
 export { default as useCloseConversation } from './hooks/api/conversations/use-close-conversation'
+export {
+  useVoiceCall,
+  type UseVoiceCallOptions
+} from './hooks/use-voice-call'
 export {
   useVoiceMicrophone,
   type UseVoiceMicrophoneOptions,
@@ -147,17 +186,26 @@ export type {
 export type {
   VoiceCallState,
   VoiceCallContextBadges,
+  VoiceCallerTicket,
+  VoiceCallerContext,
+  VoiceMatchedArticle,
+  VoiceToolState,
   VoiceTranscriptItem,
+  VoiceCallEndResult,
+  VoiceFinalizedPayload,
   VoiceClientPingCommand,
   VoiceClientMuteCommand,
   VoiceClientHangupCommand,
+  VoiceClientImageCommand,
+  VoiceClientTextPromptCommand,
   VoiceClientCommand,
   VoiceSessionReadyEvent,
   VoiceAssistantSpeakingEvent,
   VoiceAssistantTurnCompleteEvent,
   VoiceAssistantTranscriptEvent,
   VoiceServerEvent,
-  VoiceConnectionParams
+  VoiceConnectionParams,
+  VoiceCallCallbacks
 } from './types/voice.types'
 
 // 5. Constantes & Utilidades
@@ -172,8 +220,10 @@ export {
 } from './services/chat-support.services'
 export {
   buildVoiceWebSocketUrl,
-  MockVoiceCallDriver,
-  type VoiceCallDriverListeners
+  VoiceCallClient,
+  type VoiceCallClientOptions,
+  VoiceAudioEngine,
+  type VoiceAudioEngineOptions
 } from './services/voice.service'
 export {
   saveConversationSessionId,

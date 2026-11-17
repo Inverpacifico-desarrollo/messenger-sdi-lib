@@ -1,0 +1,673 @@
+'use client'
+
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useOptionalChatContext } from '../context/chat-context'
+import { VoiceCallClient } from '../services/voice/voice-call-client'
+import type {
+  VoiceCallContextBadges,
+  VoiceCallEndResult,
+  VoiceCallState,
+  VoiceCallerContext,
+  VoiceFinalizedPayload,
+  VoiceMatchedArticle,
+  VoiceToolState,
+  VoiceTranscriptItem
+} from '../types/voice.types'
+
+export interface UseVoiceCallOptions {
+  open: boolean
+  sessionId: string
+  conversationId?: string | number
+  userId?: string | number
+  userAuthId?: string | number
+  senderMessengerId?: string | number
+  wsUrl?: string
+  onOpenChange: (open: boolean) => void
+  onCallEnded?: (result: VoiceCallEndResult) => void
+}
+
+export function useVoiceCall({
+  open,
+  sessionId,
+  conversationId,
+  userId,
+  userAuthId,
+  senderMessengerId,
+  wsUrl,
+  onOpenChange,
+  onCallEnded
+}: UseVoiceCallOptions) {
+  const chatContext = useOptionalChatContext()
+
+  const [callState, setCallState] = useState<VoiceCallState>('idle')
+  const [statusText, setStatusText] = useState('Conectando con el Asistente de Voz...')
+  const [isMuted, setIsMuted] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
+  const [durationSeconds, setDurationSeconds] = useState(0)
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null)
+  const [micError, setMicError] = useState<string | null>(null)
+
+  const [analyserNode, setAnalyserNode] = useState<AnalyserNode | null>(null)
+  const [userRms, setUserRms] = useState(0)
+  const [botRms, setBotRms] = useState(0)
+
+  const [transcripts, setTranscripts] = useState<VoiceTranscriptItem[]>([])
+  const [callerContext, setCallerContext] = useState<VoiceCallerContext | null>(null)
+  const [matchedArticle, setMatchedArticle] = useState<VoiceMatchedArticle | null>(null)
+  const [activeTool, setActiveTool] = useState<VoiceToolState | null>(null)
+  const [noticeBanner, setNoticeBanner] = useState<string | null>(null)
+  const [outcomeData, setOutcomeData] = useState<Record<string, unknown> | null>(null)
+  const [outcomeType, setOutcomeType] = useState<string>('completed')
+  const [finalizedData, setFinalizedData] = useState<VoiceFinalizedPayload | null>(null)
+
+  const [isCapturingScreen, setIsCapturingScreen] = useState(false)
+  const [textInput, setTextInput] = useState('')
+  const [retryCounter, setRetryCounter] = useState(0)
+
+  const clientRef = useRef<VoiceCallClient | null>(null)
+  const statusRef = useRef<VoiceCallState>('idle')
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const noticeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isModalClosingRef = useRef(false)
+  const outcomeTypeRef = useRef('completed')
+  const outcomeDataRef = useRef<Record<string, unknown> | null>(null)
+  const onOpenChangeRef = useRef(onOpenChange)
+  const onCallEndedRef = useRef(onCallEnded)
+
+  useEffect(() => {
+    statusRef.current = callState
+  }, [callState])
+
+  useEffect(() => {
+    onOpenChangeRef.current = onOpenChange
+    onCallEndedRef.current = onCallEnded
+    outcomeTypeRef.current = outcomeType
+    outcomeDataRef.current = outcomeData
+  })
+
+  const callSessionId = useMemo(() => {
+    if (!open) return sessionId || 'call'
+    return `${sessionId || 'call'}_${Date.now()}`
+  }, [open, sessionId, retryCounter])
+
+  const showNotice = useCallback((msg: string, durationMs = 4500) => {
+    setNoticeBanner(msg)
+    if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current)
+    noticeTimerRef.current = setTimeout(() => {
+      setNoticeBanner(null)
+    }, durationMs)
+  }, [])
+
+  const stopTimer = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+  }, [])
+
+  const closeModalSafely = useCallback(
+    (overrideOutcome?: string, overrideData?: Record<string, unknown> | null) => {
+      if (isModalClosingRef.current) return
+      isModalClosingRef.current = true
+
+      stopTimer()
+      clientRef.current?.cleanup()
+      clientRef.current = null
+
+      const finalOutcome = overrideOutcome || outcomeTypeRef.current || 'completed'
+      const finalPayload = overrideData !== undefined ? overrideData : outcomeDataRef.current
+
+      onCallEndedRef.current?.({
+        outcome: finalOutcome,
+        data: finalPayload
+      })
+      onOpenChangeRef.current?.(false)
+    },
+    [stopTimer]
+  )
+
+  useEffect(() => {
+    if (!open) {
+      clientRef.current?.cleanup()
+      clientRef.current = null
+      stopTimer()
+      setCallState('idle')
+      setIsMinimized(false)
+      setAnalyserNode(null)
+      setUserRms(0)
+      setBotRms(0)
+      return
+    }
+
+    isModalClosingRef.current = false
+    setCallState('connecting')
+    statusRef.current = 'connecting'
+    setStatusText('Conectando con el Asistente de Voz...')
+    setDurationSeconds(0)
+    setTranscripts([])
+    setCallerContext(null)
+    setMatchedArticle(null)
+    setActiveTool(null)
+    setNoticeBanner(null)
+    setOutcomeData(null)
+    outcomeDataRef.current = null
+    setOutcomeType('completed')
+    outcomeTypeRef.current = 'completed'
+    setFinalizedData(null)
+    setIsCapturingScreen(false)
+    setIsMuted(false)
+    setIsMinimized(false)
+    setHasPermission(null)
+    setMicError(null)
+
+    const client = new VoiceCallClient(
+      {
+        wsUrl: wsUrl || chatContext?.config?.voiceWsUrl,
+        apiBaseUrl: chatContext?.config?.apiBaseUrl,
+        sessionId: callSessionId,
+        conversationId,
+        userId,
+        userAuthId,
+        senderMessengerId
+      },
+      {
+        onReady: (readyEvt) => {
+          setCallState('listening')
+          statusRef.current = 'listening'
+          setStatusText('Te escucho... Habla con naturalidad.')
+          if (readyEvt.caller_context) {
+            setCallerContext(readyEvt.caller_context)
+          }
+          stopTimer()
+          timerRef.current = setInterval(() => {
+            setDurationSeconds((prev) => prev + 1)
+          }, 1000)
+        },
+        onCallerContext: (ctx) => {
+          setCallerContext(ctx)
+        },
+        onPermissionChange: (granted, errMsg) => {
+          setHasPermission(granted)
+          setMicError(granted ? null : errMsg || 'Permiso de micrófono no otorgado')
+        },
+        onTranscriptUser: (text, isFinal) => {
+          if (statusRef.current !== 'escalating' && statusRef.current !== 'resolved') {
+            setCallState('thinking')
+            statusRef.current = 'thinking'
+            setStatusText('Procesando consulta...')
+          }
+          const timestamp = new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+          setTranscripts((prev) => {
+            if (prev.length > 0 && prev[prev.length - 1].sender === 'user') {
+              const copy = [...prev]
+              copy[copy.length - 1] = {
+                ...copy[copy.length - 1],
+                text,
+                isFinal: isFinal ?? true
+              }
+              return copy
+            }
+            return [
+              ...prev,
+              {
+                id: `user-${Date.now()}`,
+                sender: 'user',
+                text,
+                timestamp,
+                isFinal: isFinal ?? true
+              }
+            ]
+          })
+        },
+        onTranscriptBot: (textChunk, isFinal) => {
+          if (statusRef.current !== 'escalating' && statusRef.current !== 'resolved') {
+            setCallState('speaking')
+            statusRef.current = 'speaking'
+            setStatusText('Asistente respondiendo...')
+          }
+          const timestamp = new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+          setTranscripts((prev) => {
+            if (
+              prev.length > 0 &&
+              prev[prev.length - 1].sender === 'assistant' &&
+              prev[prev.length - 1].isFinal !== true
+            ) {
+              const copy = [...prev]
+              copy[copy.length - 1] = {
+                ...copy[copy.length - 1],
+                text: copy[copy.length - 1].text + textChunk,
+                isFinal: Boolean(isFinal)
+              }
+              return copy
+            }
+            return [
+              ...prev,
+              {
+                id: `bot-${Date.now()}`,
+                sender: 'assistant',
+                text: textChunk,
+                timestamp,
+                isFinal: Boolean(isFinal)
+              }
+            ]
+          })
+        },
+        onAssistantSpeaking: () => {
+          if (statusRef.current !== 'escalating' && statusRef.current !== 'resolved') {
+            setCallState('speaking')
+            statusRef.current = 'speaking'
+            setStatusText('Asistente respondiendo...')
+          }
+        },
+        onTurnComplete: () => {
+          setTranscripts((prev) => {
+            if (prev.length === 0) return prev
+            const last = prev[prev.length - 1]
+            if (last.sender === 'assistant' && !last.isFinal) {
+              const copy = [...prev]
+              copy[copy.length - 1] = { ...last, isFinal: true }
+              return copy
+            }
+            return prev
+          })
+          if (
+            statusRef.current !== 'ended' &&
+            statusRef.current !== 'escalating' &&
+            statusRef.current !== 'resolved'
+          ) {
+            setCallState('listening')
+            statusRef.current = 'listening'
+            setStatusText('Te escucho...')
+          }
+        },
+        onArticleMatched: (article) => {
+          setMatchedArticle(article)
+        },
+        onToolState: (toolEvt) => {
+          setActiveTool(toolEvt.status === 'running' ? toolEvt : null)
+          if (toolEvt.status === 'running') {
+            if (toolEvt.tool === 'search_knowledge_base') {
+              setStatusText('Consultando Base de Conocimiento...')
+            } else if (toolEvt.tool === 'send_steps_to_chat') {
+              setStatusText('Enviando guía visual al chat...')
+            } else if (toolEvt.tool === 'append_ticket_note') {
+              setStatusText('Actualizando nota en ticket...')
+            } else if (toolEvt.tool === 'escalate_to_human') {
+              setCallState('escalating')
+              statusRef.current = 'escalating'
+              setStatusText('Registrando expediente y escalando a técnico...')
+            } else if (toolEvt.tool === 'resolve_voice_session') {
+              setCallState('resolved')
+              statusRef.current = 'resolved'
+              setStatusText('Registrando solución exitosa...')
+            }
+          } else if (
+            toolEvt.status === 'done' &&
+            statusRef.current !== 'escalating' &&
+            statusRef.current !== 'resolved'
+          ) {
+            setCallState('speaking')
+            statusRef.current = 'speaking'
+            setStatusText('Asistente respondiendo...')
+          }
+        },
+        onImageReceived: (res) => {
+          showNotice(res.message || 'Captura analizada por el asistente')
+        },
+        onGuideSent: () => {
+          showNotice('Guía con pasos enviada al chat de Messenger', 5000)
+        },
+        onBargeIn: () => {
+          setCallState('listening')
+          statusRef.current = 'listening'
+          setStatusText('Te escucho...')
+        },
+        onOutcome: (outcomeEvt) => {
+          setOutcomeType(outcomeEvt.outcome)
+          outcomeTypeRef.current = outcomeEvt.outcome
+          if (outcomeEvt.data) {
+            setOutcomeData(outcomeEvt.data)
+            outcomeDataRef.current = outcomeEvt.data
+          }
+          if (outcomeEvt.outcome.startsWith('escalated')) {
+            setCallState('escalating')
+            statusRef.current = 'escalating'
+            setStatusText('Solicitud transferida. El asistente se está despidiendo...')
+          } else if (outcomeEvt.outcome === 'resolved') {
+            setCallState('resolved')
+            statusRef.current = 'resolved'
+            setStatusText('¡Problema resuelto! El asistente se está despidiendo...')
+          }
+        },
+        onClosing: () => {
+          setStatusText('Despidiéndose y finalizando llamada...')
+        },
+        onReconnecting: (data) => {
+          if (statusRef.current === 'ended') return
+          setCallState('reconnecting')
+          statusRef.current = 'reconnecting'
+          setStatusText(data?.message || 'Estabilizando conexión...')
+        },
+        onReconnected: (data) => {
+          if (statusRef.current === 'ended') return
+          setCallState('listening')
+          statusRef.current = 'listening'
+          setStatusText(data?.message || 'Conexión restablecida. Puedes continuar.')
+        },
+        onFinalized: (payload) => {
+          stopTimer()
+          setFinalizedData(payload)
+          if (payload.outcome) {
+            setOutcomeType(payload.outcome)
+            outcomeTypeRef.current = payload.outcome
+          }
+          if (payload.finalize) {
+            setOutcomeData(payload.finalize)
+            outcomeDataRef.current = payload.finalize
+          }
+          setCallState('ended')
+          statusRef.current = 'ended'
+          setIsMinimized(false)
+          setStatusText(payload.message || 'Llamada finalizada.')
+        },
+        onError: (err) => {
+          if (statusRef.current === 'ended') return
+          setStatusText(err.message)
+          if (statusRef.current === 'connecting') {
+            setCallState('error')
+            statusRef.current = 'error'
+          }
+        },
+        onClose: () => {
+          if (statusRef.current !== 'ended') {
+            stopTimer()
+            setCallState('ended')
+            statusRef.current = 'ended'
+            setIsMinimized(false)
+            setStatusText('Llamada terminada')
+          }
+        },
+        onLevels: (uRms, bRms) => {
+          setUserRms(uRms)
+          setBotRms(bRms)
+        }
+      },
+      {
+        onAnalyserReady: (node) => setAnalyserNode(node)
+      }
+    )
+
+    clientRef.current = client
+    client.start().catch((err) => {
+      if (clientRef.current !== client) return
+      console.error('[useVoiceCall] Error al iniciar cliente:', err)
+      setStatusText('No se pudo iniciar la llamada. Verifica el micrófono y la conexión.')
+    })
+
+    return () => {
+      client.cleanup()
+      if (clientRef.current === client) {
+        clientRef.current = null
+      }
+      stopTimer()
+      if (noticeTimerRef.current) clearTimeout(noticeTimerRef.current)
+    }
+  }, [
+    open,
+    callSessionId,
+    conversationId,
+    userId,
+    userAuthId,
+    senderMessengerId,
+    wsUrl,
+    chatContext?.config?.voiceWsUrl,
+    chatContext?.config?.apiBaseUrl,
+    stopTimer,
+    showNotice
+  ])
+
+  const handleToggleMute = useCallback(() => {
+    const nextMuted = !isMuted
+    setIsMuted(nextMuted)
+    clientRef.current?.setMuted(nextMuted)
+  }, [isMuted])
+
+  const requestMicrophone = useCallback(() => {
+    setRetryCounter((prev) => prev + 1)
+  }, [])
+
+  const handleHeroMicClick = useCallback(() => {
+    if (hasPermission === false) {
+      requestMicrophone()
+      return
+    }
+    handleToggleMute()
+  }, [hasPermission, requestMicrophone, handleToggleMute])
+
+  const handleHangup = useCallback(async () => {
+    if (isModalClosingRef.current) return
+
+    if (statusRef.current === 'ended') {
+      closeModalSafely()
+      return
+    }
+
+    stopTimer()
+    setCallState('ended')
+    statusRef.current = 'ended'
+    setIsMinimized(false)
+    setStatusText('Llamada finalizada')
+
+    const currentClient = clientRef.current
+    clientRef.current = null
+
+    try {
+      if (currentClient) {
+        await currentClient.hangup({ autoHangup: false })
+      }
+    } catch (err) {
+      console.warn('[useVoiceCall] Error durante hangup:', err)
+    }
+  }, [closeModalSafely, stopTimer])
+
+  const handleDismissEndedCall = useCallback(() => {
+    closeModalSafely()
+  }, [closeModalSafely])
+
+  // Cierre automático de cortesía tras 4.5s en la pantalla de resumen
+  useEffect(() => {
+    if (callState === 'ended') {
+      const timer = setTimeout(() => {
+        closeModalSafely()
+      }, 4500)
+      return () => clearTimeout(timer)
+    }
+  }, [callState, closeModalSafely])
+
+  const handleDialogCloseAttempt = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        if (statusRef.current === 'ended') {
+          closeModalSafely()
+          return
+        }
+        if (statusRef.current === 'connecting' || statusRef.current === 'error') {
+          closeModalSafely()
+          return
+        }
+        setIsMinimized(true)
+        return
+      }
+      onOpenChange(nextOpen)
+    },
+    [closeModalSafely, onOpenChange]
+  )
+
+  const handleSendTextPrompt = useCallback(
+    (e?: React.FormEvent) => {
+      e?.preventDefault()
+      const trimmed = textInput.trim()
+      if (!trimmed || !clientRef.current) return
+
+      clientRef.current.sendTextPrompt(trimmed)
+      const timestamp = new Date().toLocaleTimeString([], {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+      setTranscripts((prev) => [
+        ...prev,
+        {
+          id: `user-txt-${Date.now()}`,
+          sender: 'user',
+          text: trimmed,
+          timestamp,
+          isFinal: true
+        }
+      ])
+      setTextInput('')
+    },
+    [textInput]
+  )
+
+  const handleCaptureScreen = useCallback(async () => {
+    if (isCapturingScreen || !clientRef.current) return
+    try {
+      setIsCapturingScreen(true)
+      const displayStream = await navigator.mediaDevices.getDisplayMedia({
+        video: { cursor: 'always' } as MediaTrackConstraints,
+        audio: false
+      })
+      const track = displayStream.getVideoTracks()[0]
+
+      const video = document.createElement('video')
+      video.srcObject = displayStream
+      await video.play()
+
+      const canvas = document.createElement('canvas')
+      const maxDim = 1024
+      let w = video.videoWidth || 1280
+      let h = video.videoHeight || 720
+      if (w > maxDim || h > maxDim) {
+        const ratio = Math.min(maxDim / w, maxDim / h)
+        w = Math.round(w * ratio)
+        h = Math.round(h * ratio)
+      }
+      canvas.width = w
+      canvas.height = h
+      const ctx = canvas.getContext('2d')
+      ctx?.drawImage(video, 0, 0, w, h)
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82)
+
+      track.stop()
+      displayStream.getTracks().forEach((t) => t.stop())
+
+      clientRef.current.sendImage(dataUrl, 'image/jpeg')
+      showNotice('Captura de pantalla enviada al asistente')
+    } catch (err: unknown) {
+      if ((err as { name?: string })?.name !== 'NotAllowedError') {
+        console.warn('[useVoiceCall] Error en captura de pantalla:', err)
+      }
+    } finally {
+      setIsCapturingScreen(false)
+    }
+  }, [isCapturingScreen, showNotice])
+
+  const handlePhotoUpload = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0]
+      if (!file || !clientRef.current) return
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        const dataUrl = event.target?.result as string
+        if (dataUrl && clientRef.current) {
+          clientRef.current.sendImage(dataUrl, file.type || 'image/jpeg')
+          showNotice('Foto enviada al asistente')
+        }
+      }
+      reader.readAsDataURL(file)
+      e.target.value = ''
+    },
+    [showNotice]
+  )
+
+  const formattedDuration = useMemo(() => {
+    const mins = Math.floor(durationSeconds / 60)
+    const secs = durationSeconds % 60
+    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+  }, [durationSeconds])
+
+  const contextBadges = useMemo<VoiceCallContextBadges>(() => {
+    const ticketFromOutcome =
+      (outcomeData?.ticket as { number?: string } | undefined)?.number ||
+      (outcomeData?.ticket_number as string | undefined) ||
+      (finalizedData?.finalize?.ticket_number as string | undefined) ||
+      callerContext?.ticket_number ||
+      null
+
+    return {
+      sessionId: callSessionId,
+      terminalId: callerContext?.terminal_id || null,
+      ticketNumber: ticketFromOutcome,
+      serviceName: callerContext?.service_name || null,
+      posLocation: callerContext?.user?.place_name || null,
+      openTicketsCount: callerContext?.recent_open_tickets?.length || 0
+    }
+  }, [callSessionId, callerContext, outcomeData, finalizedData])
+
+  const isEnded = callState === 'ended'
+  const isConnecting =
+    callState === 'connecting' ||
+    callState === 'requesting_permission' ||
+    callState === 'idle'
+
+  const activeVUSegments = useMemo(() => {
+    if (isMuted || isConnecting || isEnded || hasPermission === false) return 0
+    if (userRms < 0.02) return 1
+    return Math.min(8, Math.max(1, Math.round(userRms * 10) + 1))
+  }, [isMuted, isConnecting, isEnded, hasPermission, userRms])
+
+  return {
+    callState,
+    statusText,
+    isMuted,
+    isMinimized,
+    setIsMinimized,
+    isEnded,
+    isConnecting,
+    durationSeconds,
+    formattedDuration,
+    hasPermission,
+    micError,
+    analyserNode,
+    userRms,
+    botRms,
+    activeVUSegments,
+    transcripts,
+    contextBadges,
+    callerContext,
+    matchedArticle,
+    activeTool,
+    noticeBanner,
+    outcomeType,
+    outcomeData,
+    finalizedData,
+    isCapturingScreen,
+    textInput,
+    setTextInput,
+    handleToggleMute,
+    handleHeroMicClick,
+    handleHangup,
+    handleDismissEndedCall,
+    handleDialogCloseAttempt,
+    handleSendTextPrompt,
+    handleCaptureScreen,
+    handlePhotoUpload,
+    requestMicrophone
+  }
+}

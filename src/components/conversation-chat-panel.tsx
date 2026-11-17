@@ -127,9 +127,9 @@ export function ConversationChatPanel({
       setQueueResponse(null)
       toast.success(
         assignedData.message ||
-          (assignedData.technician
-            ? `Asignado con ${assignedData.technician.name}`
-            : 'Asignación completada')
+        (assignedData.technician
+          ? `Asignado con ${assignedData.technician.name}`
+          : 'Asignación completada')
       )
       onEscalateSuccess?.(assignedData as EscalateChatSupportResponse)
     }
@@ -295,8 +295,8 @@ export function ConversationChatPanel({
             : 'Conversación con técnico iniciada'),
           response.ticket
             ? {
-                description: `Ticket #${response.ticket.number || response.ticket.id}`
-              }
+              description: `Ticket #${response.ticket.number || response.ticket.id}`
+            }
             : undefined
         )
       } else if (response?.status === 'in_queue' || (response?.message && !response?.ticket)) {
@@ -340,8 +340,8 @@ export function ConversationChatPanel({
         response?.message || 'Se ha creado el ticket de soporte y se ha cerrado el chat.',
         response?.ticket
           ? {
-              description: `Ticket #${response.ticket.number || response.ticket.id}`
-            }
+            description: `Ticket #${response.ticket.number || response.ticket.id}`
+          }
           : undefined
       )
     } catch (err: any) {
@@ -353,193 +353,200 @@ export function ConversationChatPanel({
     }
   }
 
-const handleResolveSubmit = async ({
-  rating,
-  comment,
-  helpful
-}: {
-  rating: number
-  comment: string
-  helpful: boolean
-}) => {
-  try {
-    const sessionId = resolveCurrentSessionId()
+  const handleResolveSubmit = async ({
+    rating,
+    comment,
+    helpful
+  }: {
+    rating: number
+    comment: string
+    helpful: boolean
+  }) => {
+    try {
+      const sessionId = resolveCurrentSessionId()
 
-    const response = await resolveSupport({
-      session_id: sessionId,
-      helpful,
-      comment,
-      rating
-    })
+      const response = await resolveSupport({
+        session_id: sessionId,
+        helpful,
+        comment,
+        rating
+      })
 
-    removeConversationSessionId(conversation.id)
-    setIsResolveOpen(false)
-    setIsResolvedLocal(true)
+      removeConversationSessionId(conversation.id)
+      setIsResolveOpen(false)
+      setIsResolvedLocal(true)
 
-    toast.success(
-      response?.message || '¡Gracias por tu calificación! El caso ha sido marcado como resuelto.',
-      response?.ticket
-        ? {
-          description: `Ticket #${response.ticket.number || response.ticket.id}`
-        }
-        : undefined
-    )
+      toast.success(
+        response?.message || '¡Gracias por tu calificación! El caso ha sido marcado como resuelto.',
+        response?.ticket
+          ? {
+            description: `Ticket #${response.ticket.number || response.ticket.id}`
+          }
+          : undefined
+      )
 
-    onResolveSuccess?.(response)
-  } catch (err: any) {
-    const errorMsg =
-      err?.response?.data?.message ||
-      err?.message ||
-      'Error al finalizar y calificar la atención'
-    toast.error(errorMsg)
+      onResolveSuccess?.(response)
+    } catch (err: any) {
+      const errorMsg =
+        err?.response?.data?.message ||
+        err?.message ||
+        'Error al finalizar y calificar la atención'
+      toast.error(errorMsg)
+    }
   }
-}
 
-return (
-  <ActiveConversationProvider value={activeConversationValue}>
-    <div
-      className='sdi-messenger-root relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'
-      onDragEnter={handleDragEnter}
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      onPaste={handlePaste}
-    >
-      {/* Cabecera del Chat Activo */}
-      {showHeader && (
-        <ConversationChatHeader
-          conversation={conversation}
-          isClosed={effectiveIsClosed}
-          isClosing={chat.isClosing}
-          onCloseConversation={chat.handleCloseConversation}
-          isContextPanelOpen={isContextPanelOpen}
-          onToggleContextPanel={onToggleContextPanel}
-          onBack={onBack}
-          alwaysShowBackButton={alwaysShowBackButton}
-          renderOptions={renderOptions}
-          onStartVoiceCall={() => setIsVoiceCallOpen(true)}
-        />
-      )}
+  return (
+    <ActiveConversationProvider value={activeConversationValue}>
+      <div
+        className='sdi-messenger-root relative flex h-full w-full min-w-0 flex-col overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xs'
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onPaste={handlePaste}
+      >
+        {/* Cabecera del Chat Activo */}
+        {showHeader && (
+          <ConversationChatHeader
+            conversation={conversation}
+            isClosed={effectiveIsClosed}
+            isClosing={chat.isClosing}
+            onCloseConversation={chat.handleCloseConversation}
+            isContextPanelOpen={isContextPanelOpen}
+            onToggleContextPanel={onToggleContextPanel}
+            onBack={onBack}
+            alwaysShowBackButton={alwaysShowBackButton}
+            renderOptions={renderOptions}
+            onStartVoiceCall={() => setIsVoiceCallOpen(true)}
+          />
+        )}
 
-      {/* Cuerpo del Chat con Wallpaper continuo (Mensajes + Typing + Composer flotante) */}
-      <div className='relative flex flex-1 min-h-0 w-full flex-col overflow-hidden bg-[#f4f6f8]/70 dark:bg-[#0a0f1d]'>
-        {/* Fondo estilo Wallpaper Corporativo SDI continuo */}
-        {showWallpaper && <ChatWallpaper />}
+        {/* Cuerpo del Chat con Wallpaper continuo (Mensajes + Typing + Composer flotante) */}
+        <div className='relative flex flex-1 min-h-0 w-full flex-col overflow-hidden bg-[#f4f6f8]/70 dark:bg-[#0a0f1d]'>
+          {/* Fondo estilo Wallpaper Corporativo SDI continuo */}
+          {showWallpaper && <ChatWallpaper />}
 
-        {/* Overlay visual al arrastrar imágenes */}
-        {isDraggingOver && (
-          <div className='absolute inset-0 z-50 flex flex-col items-center justify-center bg-blue-500/10 dark:bg-blue-600/20 backdrop-blur-xs border-2 border-dashed border-blue-500/70 dark:border-blue-400/70 rounded-2xl m-2 pointer-events-none transition-all duration-200 animate-in fade-in zoom-in-95'>
-            <div className='flex flex-col items-center gap-3 p-6 rounded-2xl bg-white/95 dark:bg-neutral-900/95 shadow-xl border border-blue-500/20 text-center max-w-xs mx-4'>
-              <div className='flex size-14 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 shadow-inner'>
-                <UploadCloud className='size-7 animate-bounce' />
-              </div>
-              <div>
-                <p className='text-sm font-semibold text-neutral-800 dark:text-neutral-100'>
-                  Suelta tu imagen aquí
-                </p>
-                <p className='text-xs text-neutral-500 dark:text-neutral-400 mt-0.5'>
-                  Se adjuntará para que puedas enviarla
-                </p>
+          {/* Overlay visual al arrastrar imágenes */}
+          {isDraggingOver && (
+            <div className='absolute inset-0 z-50 flex flex-col items-center justify-center bg-blue-500/10 dark:bg-blue-600/20 backdrop-blur-xs border-2 border-dashed border-blue-500/70 dark:border-blue-400/70 rounded-2xl m-2 pointer-events-none transition-all duration-200 animate-in fade-in zoom-in-95'>
+              <div className='flex flex-col items-center gap-3 p-6 rounded-2xl bg-white/95 dark:bg-neutral-900/95 shadow-xl border border-blue-500/20 text-center max-w-xs mx-4'>
+                <div className='flex size-14 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 shadow-inner'>
+                  <UploadCloud className='size-7 animate-bounce' />
+                </div>
+                <div>
+                  <p className='text-sm font-semibold text-neutral-800 dark:text-neutral-100'>
+                    Suelta tu imagen aquí
+                  </p>
+                  <p className='text-xs text-neutral-500 dark:text-neutral-400 mt-0.5'>
+                    Se adjuntará para que puedas enviarla
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* Área Principal de Mensajes */}
-        <ConversationMessagesList
-          conversation={conversation}
-          messages={chat.messages}
-          optimisticMessages={chat.optimisticMessages}
-          scrollRef={chat.scrollRef}
-          isFetchingNextPage={chat.isFetchingNextPage}
-          hasNextPage={chat.hasNextPage}
-          isLoading={chat.isLoading}
-          isNearBottom={chat.isNearBottom}
-          newMessagesCount={chat.newMessagesCount}
-          visibleDate={chat.visibleDate}
-          disableActions={isActionDisabled || isEscalating || isResolving}
-          onScrollToBottom={chat.scrollToBottom}
-          onActionClick={handleActionClick}
-        />
+          {/* Área Principal de Mensajes */}
+          <ConversationMessagesList
+            conversation={conversation}
+            messages={chat.messages}
+            optimisticMessages={chat.optimisticMessages}
+            scrollRef={chat.scrollRef}
+            isFetchingNextPage={chat.isFetchingNextPage}
+            hasNextPage={chat.hasNextPage}
+            isLoading={chat.isLoading}
+            isNearBottom={chat.isNearBottom}
+            newMessagesCount={chat.newMessagesCount}
+            visibleDate={chat.visibleDate}
+            disableActions={isActionDisabled || isEscalating || isResolving}
+            onScrollToBottom={chat.scrollToBottom}
+            onActionClick={handleActionClick}
+          />
 
-        {chat.typingUser && !readOnly && (
-          <div className='relative z-10 flex shrink-0 items-center gap-1.5 px-4 py-1 text-xs text-neutral-500 dark:text-neutral-400 animate-in fade-in duration-150'>
-            <span className='font-medium'>{chat.typingUser} está escribiendo</span>
-            <span className='inline-flex gap-0.5' aria-hidden='true'>
-              <span className='size-1 rounded-full bg-neutral-400 animate-pulse' />
-              <span className='size-1 rounded-full bg-neutral-400 animate-pulse delay-75' />
-              <span className='size-1 rounded-full bg-neutral-400 animate-pulse delay-150' />
-            </span>
-          </div>
-        )}
+          {chat.typingUser && !readOnly && (
+            <div className='relative z-10 flex shrink-0 items-center gap-1.5 px-4 py-1 text-xs text-neutral-500 dark:text-neutral-400 animate-in fade-in duration-150'>
+              <span className='font-medium'>{chat.typingUser} está escribiendo</span>
+              <span className='inline-flex gap-0.5' aria-hidden='true'>
+                <span className='size-1 rounded-full bg-neutral-400 animate-pulse' />
+                <span className='size-1 rounded-full bg-neutral-400 animate-pulse delay-75' />
+                <span className='size-1 rounded-full bg-neutral-400 animate-pulse delay-150' />
+              </span>
+            </div>
+          )}
 
-        {/* Barra de escritura flotante integrada en el chat */}
-        {showComposer && (
-          <div className='relative z-10 w-full'>
-            <ConversationComposer
-              inputText={chat.inputText}
-              setInputText={chat.setInputText}
-              onSendMessage={chat.handleSendMessage}
-              onSelectFile={chat.handleSelectFile}
-              pendingFile={chat.pendingFile}
-              onRemoveFile={() => chat.setPendingFile(null)}
-              isSending={chat.isSending}
-              isUploading={chat.isUploading}
-              conversationName={chat.conversationName}
-              isClosed={effectiveIsClosed}
-              readOnly={readOnly}
-              readOnlyMessage={readOnlyMessage}
-            />
-          </div>
-        )}
+          {/* Barra de escritura flotante integrada en el chat */}
+          {showComposer && (
+            <div className='relative z-10 w-full'>
+              <ConversationComposer
+                inputText={chat.inputText}
+                setInputText={chat.setInputText}
+                onSendMessage={chat.handleSendMessage}
+                onSelectFile={chat.handleSelectFile}
+                pendingFile={chat.pendingFile}
+                onRemoveFile={() => chat.setPendingFile(null)}
+                isSending={chat.isSending}
+                isUploading={chat.isUploading}
+                conversationName={chat.conversationName}
+                isClosed={effectiveIsClosed}
+                readOnly={readOnly}
+                readOnlyMessage={readOnlyMessage}
+              />
+            </div>
+          )}
+        </div>
       </div>
-    </div>
 
-    <EscalateSupportDialog
-      open={isEscalateOpen}
-      onOpenChange={(open) => {
-        setIsEscalateOpen(open)
-        if (!open) {
+      <EscalateSupportDialog
+        open={isEscalateOpen}
+        onOpenChange={(open) => {
+          setIsEscalateOpen(open)
+          if (!open) {
+            setQueueResponse(null)
+            setIsWaitingInQueue(false)
+          }
+        }}
+        onSubmit={handleEscalateSubmit}
+        isSubmitting={isEscalating}
+        queueData={queueResponse}
+        isPollingQueue={isWaitingInQueue}
+        onConvertToTicket={handleConvertToTicketSubmit}
+        isConvertingToTicket={isConvertingToTicket}
+        onActionSelect={(action) => {
+          setIsEscalateOpen(false)
           setQueueResponse(null)
-          setIsWaitingInQueue(false)
+          handleActionClick(action)
+        }}
+        error={
+          (escalateError as any)?.response?.data?.message ||
+          (escalateError as any)?.message
         }
-      }}
-      onSubmit={handleEscalateSubmit}
-      isSubmitting={isEscalating}
-      queueData={queueResponse}
-      isPollingQueue={isWaitingInQueue}
-      onConvertToTicket={handleConvertToTicketSubmit}
-      isConvertingToTicket={isConvertingToTicket}
-      onActionSelect={(action) => {
-        setIsEscalateOpen(false)
-        setQueueResponse(null)
-        handleActionClick(action)
-      }}
-      error={
-        (escalateError as any)?.response?.data?.message ||
-        (escalateError as any)?.message
-      }
-    />
+      />
 
-    <ResolveSupportDialog
-      open={isResolveOpen}
-      onOpenChange={setIsResolveOpen}
-      onSubmit={handleResolveSubmit}
-      isSubmitting={isResolving}
-      error={
-        (resolveError as any)?.response?.data?.message ||
-        (resolveError as any)?.message
-      }
-    />
+      <ResolveSupportDialog
+        open={isResolveOpen}
+        onOpenChange={setIsResolveOpen}
+        onSubmit={handleResolveSubmit}
+        isSubmitting={isResolving}
+        error={
+          (resolveError as any)?.response?.data?.message ||
+          (resolveError as any)?.message
+        }
+      />
 
-    <VoiceCallDialog
-      open={isVoiceCallOpen}
-      onOpenChange={setIsVoiceCallOpen}
-      sessionId={resolveCurrentSessionId()}
-      conversationId={conversation.id}
-      userId={chat.currentUserId || ''}
-      senderMessengerId={chat.currentUserId || ''}
-    />
-  </ActiveConversationProvider>
-)
+      <VoiceCallDialog
+        open={isVoiceCallOpen}
+        onOpenChange={setIsVoiceCallOpen}
+        sessionId={`${conversation.id}`}
+        conversationId={conversation.id}
+        userId={chat.currentUserId || ''}
+        userAuthId={chat.currentUser?.attributes?.user_auth_id || ''}
+        senderMessengerId={chat.currentUserId || ''}
+        onCallEnded={(result) => {
+          if (result.outcome === 'escalated_live' && result.data?.conversation_id) {
+            toast.success('Tu llamada ha sido transferida a un técnico de soporte.')
+          }
+          void chat.refetchMessages()
+        }}
+      />
+    </ActiveConversationProvider>
+  )
 }

@@ -535,7 +535,8 @@ export const useConversationChat = (
     setPendingFile,
     handleSendMessage,
     handleSelectFile,
-    handleCloseConversation
+    handleCloseConversation,
+    refetchMessages
   }
 }
 
