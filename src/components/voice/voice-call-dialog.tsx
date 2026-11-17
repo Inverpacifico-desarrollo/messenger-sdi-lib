@@ -115,6 +115,7 @@ export function VoiceCallDialog({
                 onToggleMute={voice.handleToggleMute}
                 onHeroMicClick={voice.handleHeroMicClick}
                 onRequestMicrophone={voice.requestMicrophone}
+                onMinimize={() => voice.setIsMinimized(true)}
                 onHangup={voice.handleHangup}
               />
             </>

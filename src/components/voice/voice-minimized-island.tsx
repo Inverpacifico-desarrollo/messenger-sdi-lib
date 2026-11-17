@@ -2,8 +2,8 @@
 
 import React from 'react'
 import { createPortal } from 'react-dom'
-import { Bot, Maximize2, Mic, MicOff, PhoneOff } from 'lucide-react'
-import { cn } from '../../ui'
+import { Maximize2, Mic, MicOff, PhoneOff } from 'lucide-react'
+import { Avatar, cn } from '../../ui'
 import type { VoiceCallState } from '../../types/voice.types'
 
 export interface VoiceMinimizedIslandProps {
@@ -31,18 +31,16 @@ export function VoiceMinimizedIsland({
 
   return createPortal(
     <div className='sdi-messenger-root fixed top-5 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 p-2 pl-3 rounded-full bg-white/95 backdrop-blur-md border border-neutral-200/90 shadow-2xl animate-in slide-in-from-top-4 duration-200 max-w-[95vw]'>
-      {/* Avatar del Asistente */}
+      {/* Avatar del Asistente (estilo Messenger) */}
       <div className='relative shrink-0'>
-        <div className='flex size-8.5 items-center justify-center rounded-full bg-violet-600 text-white shadow-xs'>
-          <Bot className='size-4.5' />
-        </div>
+        <Avatar name='Asistente de Voz SDi' isBot size='sm' />
         <span
           className={cn(
             'absolute -bottom-0.5 -right-0.5 size-2.5 rounded-full ring-2 ring-white animate-pulse',
             hasPermission === false
               ? 'bg-amber-500'
               : callState === 'speaking'
-              ? 'bg-violet-500'
+              ? 'bg-blue-500'
               : callState === 'listening'
               ? 'bg-emerald-500'
               : isMuted

@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useCallback, useEffect, useRef, useState } from 'react'
-import { BookOpen, Bot, CheckCircle2, ChevronsDown, Sparkles } from 'lucide-react'
+import { BookOpen, CheckCircle2, ChevronsDown, Sparkles } from 'lucide-react'
+import { Avatar } from '../../ui'
 import type { VoiceMatchedArticle, VoiceTranscriptItem } from '../../types/voice.types'
 
 export interface VoiceTranscriptListProps {
@@ -80,8 +81,8 @@ export function VoiceTranscriptList({
       {(matchedArticle || noticeBanner) && (
         <div className='mx-5 mt-2.5 space-y-1.5 shrink-0'>
           {matchedArticle && (
-            <div className='flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50/70 px-3 py-2 text-xs text-violet-900'>
-              <BookOpen className='size-3.5 text-violet-600 shrink-0' />
+            <div className='flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50/70 px-3 py-2 text-xs text-blue-900'>
+              <BookOpen className='size-3.5 text-blue-600 shrink-0' />
               <span className='truncate'>
                 <strong className='font-semibold'>Guía aplicada:</strong> {matchedArticle.title}
               </span>
@@ -133,51 +134,64 @@ export function VoiceTranscriptList({
                   key={item.id}
                   className={
                     isBot
-                      ? 'flex items-start gap-3 animate-in fade-in slide-in-from-bottom-1 duration-200'
-                      : 'flex items-start justify-end gap-2.5 animate-in fade-in slide-in-from-bottom-1 duration-200'
+                      ? 'flex items-start gap-2.5 max-w-[90%] animate-in fade-in slide-in-from-bottom-1 duration-200'
+                      : 'flex items-start justify-end gap-2.5 ml-auto max-w-[85%] animate-in fade-in slide-in-from-bottom-1 duration-200'
                   }
                 >
                   {isBot && (
-                    <div className='relative shrink-0 mt-0.5'>
-                      <div className='flex size-8 items-center justify-center rounded-full bg-violet-600 text-white shadow-2xs'>
-                        <Bot className='size-4' />
-                      </div>
-                    </div>
+                    <Avatar
+                      name='Asistente SDi'
+                      isBot
+                      size='sm'
+                      className='mt-0.5 shrink-0'
+                    />
                   )}
 
-                  <div
-                    className={
-                      isBot
-                        ? 'flex flex-col gap-1 max-w-[85%] rounded-2xl border border-violet-200/80 bg-violet-50/40 px-4 py-3 text-[13px] leading-relaxed text-neutral-800 shadow-2xs'
-                        : 'flex flex-col gap-1 max-w-[80%] rounded-2xl bg-violet-600 px-4 py-2.5 text-[13px] leading-relaxed text-white shadow-xs'
-                    }
-                  >
-                    {isBot && (
-                      <div className='flex items-center gap-1.5 mb-0.5'>
-                        <span className='text-xs font-bold text-violet-700'>Asistente SDi</span>
-                        <span className='inline-flex items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.2 text-[9px] font-bold text-violet-700 border border-violet-200/60'>
+                  <div className={isBot ? 'flex min-w-0 flex-col gap-1' : 'flex min-w-0 flex-col gap-1 items-end'}>
+                    <div className='flex items-center gap-1.5 min-w-0'>
+                      <span
+                        className={
+                          isBot
+                            ? 'text-xs font-bold text-violet-700 truncate'
+                            : 'text-xs font-semibold text-neutral-800 truncate'
+                        }
+                      >
+                        {isBot ? 'Asistente SDi' : 'Tú'}
+                      </span>
+                      {isBot && (
+                        <span className='inline-flex items-center gap-0.5 rounded-full bg-violet-100 px-1.5 py-0.2 text-[9.5px] font-semibold text-violet-700 border border-violet-200/60 shadow-2xs'>
                           <Sparkles className='size-2.5 text-violet-600' />
                           <span>IA</span>
                         </span>
-                        <span className='text-[11px] text-neutral-400 font-medium ml-1'>
-                          {item.timestamp}
-                        </span>
-                      </div>
-                    )}
-                    <p className='whitespace-pre-wrap'>
-                      {item.text}
-                      {isBot && !item.isFinal && (
-                        <span
-                          className='inline-block w-1.5 h-3.5 ml-1 bg-violet-500 animate-pulse align-middle rounded-xs'
-                          aria-hidden='true'
-                        />
                       )}
-                    </p>
-                    {!isBot && (
-                      <span className='text-[10px] text-white/75 text-right mt-0.5'>
-                        {item.timestamp}
-                      </span>
-                    )}
+                    </div>
+
+                    <div
+                      className={
+                        isBot
+                          ? 'rounded-2xl rounded-tl-xs bg-gradient-to-b from-violet-50/70 to-white px-3.5 py-2.5 text-xs sm:text-[13px] leading-relaxed text-neutral-900 border border-violet-200/70 shadow-xs ring-1 ring-violet-500/10'
+                          : 'rounded-2xl rounded-tr-xs bg-blue-600 px-3.5 py-2.5 text-xs sm:text-[13px] leading-relaxed text-white shadow-xs'
+                      }
+                    >
+                      <p className='whitespace-pre-wrap break-words'>
+                        {item.text}
+                        {isBot && !item.isFinal && (
+                          <span
+                            className='inline-block w-1.5 h-3.5 ml-1 bg-violet-500 animate-pulse align-middle rounded-xs'
+                            aria-hidden='true'
+                          />
+                        )}
+                      </p>
+                      <div
+                        className={
+                          isBot
+                            ? 'mt-1 flex items-center justify-end text-[10px] leading-none text-neutral-400'
+                            : 'mt-1 flex items-center justify-end text-[10px] leading-none text-blue-100/80'
+                        }
+                      >
+                        <span>{item.timestamp}</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )
@@ -193,7 +207,7 @@ export function VoiceTranscriptList({
                 type='button'
                 onClick={() => scrollToBottom('smooth')}
                 aria-label={`${unreadCount} mensaje${unreadCount > 1 ? 's' : ''} nuevo${unreadCount > 1 ? 's' : ''}, ir al final`}
-                className='pointer-events-auto flex items-center gap-1.5 rounded-full bg-violet-600 hover:bg-violet-700 text-white px-3.5 py-1.5 text-[11px] font-semibold shadow-lg ring-2 ring-white transition-all active:scale-95 cursor-pointer'
+                className='pointer-events-auto flex items-center gap-1.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 text-[11px] font-semibold shadow-lg ring-2 ring-white transition-all active:scale-95 cursor-pointer'
               >
                 <span className='size-1.5 rounded-full bg-emerald-300 animate-ping' />
                 <span>
@@ -209,7 +223,7 @@ export function VoiceTranscriptList({
                 onClick={() => scrollToBottom('smooth')}
                 title='Ir a los mensajes recientes'
                 aria-label='Ir a los mensajes recientes'
-                className='pointer-events-auto flex items-center gap-1 rounded-full bg-white/95 hover:bg-neutral-50 text-violet-600 border border-violet-200/80 px-3 py-1.5 text-[11px] font-semibold shadow-md backdrop-blur-xs transition-all active:scale-95 cursor-pointer'
+                className='pointer-events-auto flex items-center gap-1 rounded-full bg-white/95 hover:bg-neutral-50 text-blue-600 border border-blue-200/80 px-3 py-1.5 text-[11px] font-semibold shadow-md backdrop-blur-xs transition-all active:scale-95 cursor-pointer'
               >
                 <ChevronsDown className='size-3.5' />
                 <span>Bajar</span>

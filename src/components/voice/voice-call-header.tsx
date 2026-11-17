@@ -1,8 +1,8 @@
 'use client'
 
 import React from 'react'
-import { Bot, Clock, Loader2, MapPin, Minimize2, Ticket } from 'lucide-react'
-import { cn } from '../../ui'
+import { Clock, Loader2, MapPin, Ticket } from 'lucide-react'
+import { Avatar, cn } from '../../ui'
 import type { VoiceCallContextBadges, VoiceCallState } from '../../types/voice.types'
 
 export interface VoiceCallHeaderProps {
@@ -11,7 +11,7 @@ export interface VoiceCallHeaderProps {
   isEnded: boolean
   formattedDuration: string
   contextBadges: VoiceCallContextBadges
-  onMinimize: () => void
+  onMinimize?: () => void
 }
 
 export function VoiceCallHeader({
@@ -19,19 +19,16 @@ export function VoiceCallHeader({
   isConnecting,
   isEnded,
   formattedDuration,
-  contextBadges,
-  onMinimize
+  contextBadges
 }: VoiceCallHeaderProps) {
   const isReconnecting = callState === 'reconnecting'
 
   return (
     <div className='flex items-center justify-between p-5 pb-3 border-b border-neutral-100 bg-white'>
       <div className='flex items-center gap-3 min-w-0'>
-        {/* Avatar Bot Circular Violeta */}
+        {/* Avatar Bot Circular (estilo Messenger) */}
         <div className='relative shrink-0'>
-          <div className='flex size-11 items-center justify-center rounded-full bg-violet-600 text-white shadow-xs'>
-            <Bot className='size-6' />
-          </div>
+          <Avatar name='Asistente de Voz SDi' isBot size='md' />
           <span
             className={cn(
               'absolute bottom-0 right-0 size-3 rounded-full ring-2 ring-white',
@@ -96,26 +93,13 @@ export function VoiceCallHeader({
         </div>
       </div>
 
-      {/* Acciones de Cabecera: Cronómetro y Minimizar */}
+      {/* Acciones de Cabecera: Cronómetro */}
       {!isConnecting && (
         <div className='flex items-center gap-2 shrink-0'>
           <div className='flex items-center gap-1.5 rounded-full border border-neutral-200/90 bg-neutral-50/80 px-3 py-1.5 text-xs font-mono font-semibold text-neutral-700 shadow-2xs'>
             <Clock className='size-3.5 text-neutral-500' />
             <span>{formattedDuration}</span>
           </div>
-
-          {!isEnded && (
-            <button
-              type='button'
-              onClick={onMinimize}
-              title='Minimizar llamada'
-              aria-label='Minimizar llamada'
-              className='flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 hover:border-neutral-300 shadow-2xs transition-all cursor-pointer'
-            >
-              <Minimize2 className='size-3.5 text-neutral-500' />
-              <span className='hidden sm:inline text-[11px] font-medium'>Minimizar</span>
-            </button>
-          )}
         </div>
       )}
     </div>

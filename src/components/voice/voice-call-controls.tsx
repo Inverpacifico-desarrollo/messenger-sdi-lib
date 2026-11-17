@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Mic, MicOff, PhoneOff, Send, ShieldCheck } from 'lucide-react'
+import { Mic, MicOff, Minimize2, PhoneOff, Send, ShieldCheck } from 'lucide-react'
 // import { Camera, Loader2, Monitor } from 'lucide-react'
 import { cn } from '../../ui'
 
@@ -15,9 +15,10 @@ export interface VoiceCallControlsProps {
   onSendTextPrompt: (e: React.FormEvent) => void
   onCaptureScreen?: () => void
   onPhotoUpload?: (e: React.ChangeEvent<HTMLInputElement>) => void
-  onToggleMute: () => void
+  onToggleMute?: () => void
   onHeroMicClick: () => void
-  onRequestMicrophone: () => void
+  onRequestMicrophone?: () => void
+  onMinimize: () => void
   onHangup: () => void
 }
 
@@ -28,20 +29,19 @@ export function VoiceCallControls({
   textInput,
   onTextInputChange,
   onSendTextPrompt,
-  onToggleMute,
   onHeroMicClick,
-  onRequestMicrophone,
+  onMinimize,
   onHangup
 }: VoiceCallControlsProps) {
   // const fileInputRef = useRef<HTMLInputElement>(null)
   const isBlocked = hasPermission === false
 
   return (
-    <div className='mt-3 flex flex-col bg-white shrink-0'>
+    <div className='mt-6 flex flex-col bg-white shrink-0'>
       {/* Barra de Entrada Multimodal (Texto) */}
       <form
         onSubmit={onSendTextPrompt}
-        className='mx-5 mb-2 flex items-center gap-1.5 rounded-2xl border border-neutral-200 bg-white px-2.5 py-2 shadow-2xs focus-within:border-violet-400 focus-within:ring-2 focus-within:ring-violet-500/15 transition-all'
+        className='mx-5 mb-2 flex items-center gap-1.5 rounded-2xl border border-neutral-200 bg-white px-2.5 py-2 shadow-2xs focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500/15 transition-all'
       >
         {/*
         <button
@@ -90,83 +90,81 @@ export function VoiceCallControls({
           type='submit'
           disabled={!textInput.trim()}
           title='Enviar mensaje de texto al asistente'
-          className='flex size-8 items-center justify-center rounded-full bg-violet-600 text-white hover:bg-violet-700 disabled:bg-violet-300 disabled:cursor-not-allowed transition-all shadow-xs shrink-0 cursor-pointer active:scale-95'
+          className='flex size-8 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition-all shadow-xs shrink-0 cursor-pointer active:scale-95'
         >
           <Send className='size-3.5' />
         </button>
       </form>
 
-      {/* Botonera Telefónica Central */}
-      <div className='px-5 pt-2 pb-2 bg-white flex items-center justify-center gap-4 sm:gap-5'>
-        {/* Botón Silenciar / Solicitar permiso */}
-        <button
-          type='button'
-          onClick={isBlocked ? onRequestMicrophone : onToggleMute}
-          className={cn(
-            'flex items-center gap-1.5 rounded-full border border-neutral-200 bg-white px-4 py-2 text-xs font-semibold transition-all shadow-2xs cursor-pointer shrink-0',
-            isBlocked
-              ? 'text-amber-700 border-amber-300 bg-amber-50/70 hover:bg-amber-100/70'
-              : isMuted
-              ? 'text-amber-600 border-amber-300 bg-amber-50/60'
-              : 'text-neutral-700 hover:bg-neutral-50'
-          )}
-        >
-          <MicOff
-            className={cn(
-              'size-4',
-              isBlocked ? 'text-amber-600' : isMuted ? 'text-amber-500' : 'text-violet-600'
-            )}
-          />
-          <span>{isBlocked ? 'Sin permiso' : isMuted ? 'Silenciado' : 'Silenciar'}</span>
-        </button>
+      {/* Botonera Telefónica Plana y Minimalista (Minimizar | Micrófono | Finalizar) */}
+      <div className='px-5 pt-2 pb-2 bg-white flex items-center justify-center gap-8 sm:gap-10'>
+        {/* Botón Minimizar Llamada */}
+        <div className='flex flex-col items-center gap-1.5 shrink-0'>
+          <button
+            type='button'
+            onClick={onMinimize}
+            title='Minimizar llamada'
+            aria-label='Minimizar llamada'
+            className='flex size-11 items-center justify-center rounded-full border border-neutral-200 bg-white text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900 transition-colors cursor-pointer active:scale-95'
+          >
+            <Minimize2 className='size-4.5' />
+          </button>
+          <span className='text-[10px] font-medium leading-none text-neutral-400'>
+            Minimizar
+          </span>
+        </div>
 
-        {/* Centro: Botón Micrófono Hero con Aura Reactiva */}
-        <div className='relative flex items-center justify-center shrink-0'>
-          <div
-            className={cn(
-              'p-2 rounded-full transition-all duration-150',
+        {/* Botón Principal de Micrófono (Activo / Silenciado) */}
+        <div className='flex flex-col items-center gap-1.5 shrink-0'>
+          <button
+            type='button'
+            onClick={onHeroMicClick}
+            title={
               isBlocked
-                ? 'bg-amber-100/70 ring-8 ring-amber-500/20'
+                ? 'Permiso de micrófono no otorgado. Haz clic para solicitar permiso'
                 : isMuted
-                ? 'bg-amber-100/60 ring-8 ring-amber-500/15'
-                : userRms > 0.08
-                ? 'bg-violet-100 ring-10 ring-violet-500/30'
-                : 'bg-violet-100/60 ring-8 ring-violet-500/15'
+                  ? 'Micrófono silenciado (clic para activar)'
+                  : 'Micrófono activo (clic para silenciar)'
+            }
+            aria-label={isBlocked ? 'Sin permiso' : isMuted ? 'Micrófono silenciado' : 'Micrófono activo'}
+            className={cn(
+              'flex size-13 items-center justify-center rounded-full border transition-all cursor-pointer active:scale-95',
+              isBlocked
+                ? 'bg-neutral-100 text-amber-600 border-amber-200 hover:bg-neutral-200/60'
+                : isMuted
+                  ? 'bg-neutral-100 text-neutral-400 border-neutral-200 hover:bg-neutral-200/70 hover:text-neutral-600'
+                  : userRms > 0.08
+                    ? 'bg-neutral-900 text-white border-neutral-900 scale-[1.03]'
+                    : 'bg-neutral-800 text-white border-neutral-800 hover:bg-neutral-900'
             )}
           >
-            <button
-              type='button'
-              onClick={onHeroMicClick}
-              title={
-                isBlocked
-                  ? 'Permiso de micrófono no otorgado. Haz clic para solicitar permiso'
-                  : isMuted
-                  ? 'Activar micrófono'
-                  : 'Micrófono activo'
-              }
-              className={cn(
-                'flex size-14 items-center justify-center rounded-full text-white transition-all shadow-xl active:scale-95 cursor-pointer',
-                isBlocked
-                  ? 'bg-amber-600 hover:bg-amber-700 shadow-amber-600/35 ring-4 ring-amber-600/20'
-                  : isMuted
-                  ? 'bg-amber-500 shadow-amber-500/30 ring-4 ring-amber-500/20'
-                  : 'bg-violet-600 hover:bg-violet-700 shadow-violet-600/35 ring-4 ring-violet-600/20'
-              )}
-            >
-              {isBlocked || isMuted ? <MicOff className='size-6' /> : <Mic className='size-6' />}
-            </button>
-          </div>
+            {isBlocked || isMuted ? <MicOff className='size-5.5' /> : <Mic className='size-5.5' />}
+          </button>
+          <span
+            className={cn(
+              'text-[10px] font-medium leading-none',
+              isBlocked ? 'text-amber-600' : isMuted ? 'text-neutral-400' : 'text-neutral-600'
+            )}
+          >
+            {isBlocked ? 'Sin permiso' : isMuted ? 'Silenciado' : 'Activo'}
+          </span>
         </div>
 
         {/* Botón Finalizar / Colgar */}
-        <button
-          type='button'
-          onClick={onHangup}
-          className='flex items-center gap-1.5 rounded-full bg-red-50 hover:bg-red-100 border border-red-100 px-4 py-2 text-xs font-semibold text-red-600 shadow-2xs cursor-pointer active:scale-95 transition-all shrink-0'
-        >
-          <PhoneOff className='size-4' />
-          <span>Finalizar</span>
-        </button>
+        <div className='flex flex-col items-center gap-1.5 shrink-0'>
+          <button
+            type='button'
+            onClick={onHangup}
+            title='Finalizar llamada'
+            aria-label='Finalizar llamada'
+            className='flex size-11 items-center justify-center rounded-full border border-neutral-200 bg-white text-red-600 hover:bg-red-50 hover:border-red-200 transition-colors cursor-pointer active:scale-95'
+          >
+            <PhoneOff className='size-4.5' />
+          </button>
+          <span className='text-[10px] font-medium leading-none text-neutral-400'>
+            Finalizar
+          </span>
+        </div>
       </div>
 
       {/* Pie de Seguridad */}

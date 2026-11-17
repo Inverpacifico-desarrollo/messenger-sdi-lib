@@ -1,7 +1,8 @@
 'use client'
 
 import React from 'react'
-import { Bot, Loader2, PhoneOff } from 'lucide-react'
+import { Loader2, PhoneOff } from 'lucide-react'
+import { Avatar } from '../../ui'
 
 export interface VoiceCallConnectingProps {
   statusText: string
@@ -13,13 +14,11 @@ export function VoiceCallConnecting({ statusText, onCancel }: VoiceCallConnectin
     <div className='flex flex-col flex-1'>
       <div className='flex flex-1 flex-col items-center justify-center text-center p-8 min-h-[300px]'>
         <div className='relative mb-5'>
-          <div className='flex size-16 items-center justify-center rounded-full bg-violet-600 text-white shadow-xl shadow-violet-600/30'>
-            <Bot className='size-8' />
-          </div>
-          <span className='absolute inset-0 rounded-full bg-violet-500/20 animate-ping' />
+          <Avatar name='Asistente SDi' isBot size='xl' className='shadow-xl' />
+          <span className='absolute inset-0 rounded-full bg-blue-500/15 animate-ping' />
         </div>
         <div className='flex items-center gap-2 text-sm font-bold text-neutral-800'>
-          <Loader2 className='size-4 animate-spin text-violet-600' />
+          <Loader2 className='size-4 animate-spin text-blue-600' />
           <span>{statusText || 'Conectando con el Asistente Virtual...'}</span>
         </div>
         <p className='text-xs text-neutral-400 mt-1 max-w-xs leading-relaxed'>

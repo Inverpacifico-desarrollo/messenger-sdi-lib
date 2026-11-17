@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Ear, Loader2, Mic, MicOff, Volume2 } from 'lucide-react'
+import { Mic, MicOff } from 'lucide-react'
 import { cn } from '../../ui'
 import type { VoiceCallState, VoiceToolState } from '../../types/voice.types'
 import { VoiceWaveformCanvas } from './voice-waveform-canvas'
@@ -63,52 +63,16 @@ export function VoiceAudioVisualizerCard({
 
   return (
     <div className='mx-5 mt-3 rounded-2xl border border-neutral-200/80 bg-white p-3.5 shadow-2xs flex items-center justify-between gap-3'>
-      {/* Lado Izquierdo: Icono de Estado + Texto */}
+      {/* Lado Izquierdo: Solo Texto en Color Negro */}
       <div
-        className={cn('flex items-center gap-3 shrink-0', isBlocked && 'cursor-pointer')}
+        className={cn('flex flex-col max-w-[145px] sm:max-w-[175px] shrink-0', isBlocked && 'cursor-pointer')}
         onClick={isBlocked ? onRequestMicrophone : undefined}
         title={isBlocked ? 'Haz clic para permitir acceso al micrófono' : undefined}
       >
-        <div
-          className={cn(
-            'relative flex size-11 items-center justify-center rounded-full shadow-2xs transition-all',
-            isBlocked
-              ? 'bg-amber-50 border border-amber-200 text-amber-600 ring-4 ring-amber-500/10'
-              : isSpeaking
-              ? 'bg-violet-50 border border-violet-200 text-violet-600 ring-4 ring-violet-500/10'
-              : 'bg-emerald-50/90 border border-emerald-200/70 text-emerald-600 ring-4 ring-emerald-500/10'
-          )}
-        >
-          {isBlocked ? (
-            <MicOff className='size-5 text-amber-600' />
-          ) : isThinkingOrTool ? (
-            <Loader2 className='size-5 text-emerald-600 animate-spin' />
-          ) : isSpeaking ? (
-            <Volume2 className='size-5 text-violet-600' />
-          ) : (
-            <Ear className='size-5 text-emerald-600' />
-          )}
-
-          {!isBlocked && !isMuted && userRms > 0.08 && !isSpeaking && (
-            <span className='absolute inset-0 rounded-full bg-emerald-500/25 animate-ping' />
-          )}
-        </div>
-
-        <div className='flex flex-col max-w-[140px] sm:max-w-[165px]'>
-          <span
-            className={cn(
-              'text-sm font-bold truncate',
-              isBlocked
-                ? 'text-amber-800'
-                : isSpeaking
-                ? 'text-violet-700'
-                : 'text-emerald-600'
-            )}
-          >
-            {primaryTitle}
-          </span>
-          <span className='text-xs text-neutral-400 truncate'>{secondarySubtitle}</span>
-        </div>
+        <span className='text-sm font-bold truncate text-neutral-900'>
+          {primaryTitle}
+        </span>
+        <span className='text-xs text-neutral-500 truncate'>{secondarySubtitle}</span>
       </div>
 
       {/* Centro: Visualizador Canvas reactivo al micrófono real / salida del bot */}
