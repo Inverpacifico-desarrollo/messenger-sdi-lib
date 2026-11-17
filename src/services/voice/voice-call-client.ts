@@ -77,45 +77,71 @@ export class VoiceCallClient {
       return
     }
 
-    // 3. Conectar WebSocket con el Gateway de Voz
-    this.ws = new WebSocket(url)
-    this.ws.binaryType = 'arraybuffer'
+    // 3. Conectar WebSocket con el Gateway de Voz con reintento automático si el gateway tarda en responder
+    let connectAttempts = 0
+    const maxConnectRetries = 2
 
-    this.ws.onopen = () => {
-      this.connected = true
-      if (this.heartbeatIntervalId) {
-        clearInterval(this.heartbeatIntervalId)
-      }
-      // Heartbeat periódico cada 20 segundos según especificación
-      this.heartbeatIntervalId = setInterval(() => {
-        if (this.connected && this.ws?.readyState === WebSocket.OPEN) {
-          this.ws.send(JSON.stringify({ type: 'ping' }))
+    const connectWs = () => {
+      if (this.isDisposed) return
+
+      const ws = new WebSocket(url)
+      this.ws = ws
+      ws.binaryType = 'arraybuffer'
+
+      ws.onopen = () => {
+        this.connected = true
+        connectAttempts = 0
+        if (this.heartbeatIntervalId) {
+          clearInterval(this.heartbeatIntervalId)
         }
-      }, 20000)
-    }
+        // Heartbeat periódico cada 20 segundos según especificación
+        this.heartbeatIntervalId = setInterval(() => {
+          if (this.connected && this.ws?.readyState === WebSocket.OPEN) {
+            this.ws.send(JSON.stringify({ type: 'ping' }))
+          }
+        }, 20000)
+      }
 
-    this.ws.onmessage = (event: MessageEvent) => {
-      if (typeof event.data === 'string') {
-        try {
-          const json = JSON.parse(event.data)
-          this.handleJsonEvent(json)
-        } catch (err) {
-          console.warn('[VoiceCallClient] Error parseando evento JSON:', err)
+      ws.onmessage = (event: MessageEvent) => {
+        if (typeof event.data === 'string') {
+          try {
+            const json = JSON.parse(event.data)
+            this.handleJsonEvent(json)
+          } catch (err) {
+            console.warn('[VoiceCallClient] Error parseando evento JSON:', err)
+          }
+        } else if (event.data instanceof ArrayBuffer) {
+          this.audioEngine.playAudioChunk(event.data)
         }
-      } else if (event.data instanceof ArrayBuffer) {
-        this.audioEngine.playAudioChunk(event.data)
+      }
+
+      ws.onerror = () => {
+        if (!this.connected && connectAttempts < maxConnectRetries && !this.isDisposed) {
+          connectAttempts++
+          this.callbacks.onReconnecting?.({
+            message: `Reintentando conexión con el gateway de voz (intento ${connectAttempts}/${maxConnectRetries})...`
+          })
+          setTimeout(() => {
+            if (!this.isDisposed && !this.connected) {
+              connectWs()
+            }
+          }, 1500)
+          return
+        }
+        this.callbacks.onError?.(new Error('Error de conexión con el servidor de voz.'))
+      }
+
+      ws.onclose = () => {
+        if (!this.connected && connectAttempts < maxConnectRetries && !this.isDisposed) {
+          return
+        }
+        this.connected = false
+        this.cleanup()
+        this.callbacks.onClose?.()
       }
     }
 
-    this.ws.onerror = () => {
-      this.callbacks.onError?.(new Error('Error de conexión con el servidor de voz.'))
-    }
-
-    this.ws.onclose = () => {
-      this.connected = false
-      this.cleanup()
-      this.callbacks.onClose?.()
-    }
+    connectWs()
 
     // Reporte de niveles RMS a 30 FPS para el visualizador y medidor VU
     this.levelIntervalId = setInterval(() => {

@@ -39,9 +39,10 @@ export function buildVoiceWebSocketUrl({
   } else {
     const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:'
     const protocol = isSecure ? 'wss:' : 'ws:'
-    const portSuffix = port ? `:${port}` : ''
+    const effectivePort = port || 8095
+    const portSuffix = `:${effectivePort}`
     const cleanHost = host.replace(/^https?:\/\//i, '').replace(/^wss?:\/\//i, '').replace(/\/+$/, '')
-    baseEndpoint = `${protocol}//${cleanHost}${portSuffix}/messenger_voice/ws/voice/call`
+    baseEndpoint = `${protocol}//${cleanHost}${portSuffix}/ws/voice/call`
   }
 
   const params = new URLSearchParams()

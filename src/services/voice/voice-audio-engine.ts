@@ -208,26 +208,34 @@ export class VoiceAudioEngine {
     const targetRate = 16000
     const ctxRate = this.inputAudioCtx.sampleRate
     const ratio = ctxRate / targetRate
+    const chunkSamples = 1600 // 100 ms @ 16 kHz = 3,200 bytes
+    const pcmBuffer = new Int16Array(chunkSamples)
+    let bufferIndex = 0
 
     this.scriptProcessor.onaudioprocess = (e) => {
       const input = e.inputBuffer.getChannelData(0)
       const outSamples = Math.floor(input.length / ratio)
-      const pcm16 = new Int16Array(outSamples)
 
-      let sumSquares = 0
       for (let i = 0; i < outSamples; i++) {
         const sample = input[Math.floor(i * ratio)]
         const clamped = Math.max(-1.0, Math.min(1.0, sample))
         const val = clamped < 0 ? clamped * 0x8000 : clamped * 0x7fff
-        pcm16[i] = val
-        sumSquares += val * val
-      }
+        pcmBuffer[bufferIndex++] = val
 
-      const normalizedRms = Math.min(1.0, Math.sqrt(sumSquares / Math.max(1, outSamples)) / 4000)
-      this.latestUserRms = this.isMuted ? 0 : normalizedRms
+        if (bufferIndex >= chunkSamples) {
+          let sumSquares = 0
+          for (let b = 0; b < chunkSamples; b++) {
+            sumSquares += pcmBuffer[b] * pcmBuffer[b]
+          }
+          const normalizedRms = Math.min(1.0, Math.sqrt(sumSquares / chunkSamples) / 4000)
+          this.latestUserRms = this.isMuted ? 0 : normalizedRms
 
-      if (!this.isMuted && !this.isDrainingFarewell) {
-        this.options.onPcmChunk?.(pcm16.buffer, normalizedRms)
+          if (!this.isMuted && !this.isDrainingFarewell) {
+            const transfer = new Int16Array(pcmBuffer)
+            this.options.onPcmChunk?.(transfer.buffer, normalizedRms)
+          }
+          bufferIndex = 0
+        }
       }
     }
 
