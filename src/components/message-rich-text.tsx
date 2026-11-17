@@ -43,202 +43,32 @@ function decodeHtmlEntities(input: string): string {
     .replace(/&amp;/gi, '&')
 }
 
-interface HtmlElementNode {
-  type: 'element'
-  tag: string
-  attrs: Record<string, string>
-  children: HtmlAstNode[]
-}
+// -------------------------------------------------------------
+// Tipos del AST de Markdown
+// -------------------------------------------------------------
 
-interface HtmlTextNode {
-  type: 'text'
-  value: string
-}
+export type MarkdownInlineNode =
+  | { type: 'text'; value: string }
+  | { type: 'bold'; children: MarkdownInlineNode[] }
+  | { type: 'italic'; children: MarkdownInlineNode[] }
+  | { type: 'underline'; children: MarkdownInlineNode[] }
+  | { type: 'strike'; children: MarkdownInlineNode[] }
+  | { type: 'inlineCode'; value: string }
+  | { type: 'link'; href: string; label: string; isAuto?: boolean }
+  | { type: 'br' }
 
-type HtmlAstNode = HtmlElementNode | HtmlTextNode
+export type MarkdownBlockNode =
+  | { type: 'code'; language?: string; code: string }
+  | { type: 'heading'; level: 1 | 2 | 3 | 4 | 5 | 6; children: MarkdownInlineNode[] }
+  | { type: 'quote'; lines: string[] }
+  | { type: 'list'; ordered: boolean; start?: number; items: MarkdownInlineNode[][] }
+  | { type: 'table'; headers: MarkdownInlineNode[][]; rows: MarkdownInlineNode[][][] }
+  | { type: 'hr' }
+  | { type: 'paragraph'; children: MarkdownInlineNode[] }
 
-const VOID_TAGS = new Set(['br', 'hr', 'img'])
-const ALLOWED_TAGS = new Set([
-  'b',
-  'strong',
-  'i',
-  'em',
-  'u',
-  's',
-  'strike',
-  'del',
-  'p',
-  'div',
-  'span',
-  'br',
-  'hr',
-  'ul',
-  'ol',
-  'li',
-  'pre',
-  'code',
-  'blockquote',
-  'h1',
-  'h2',
-  'h3',
-  'h4',
-  'h5',
-  'h6',
-  'table',
-  'thead',
-  'tbody',
-  'tr',
-  'th',
-  'td',
-  'a'
-])
-
-function parseAttributes(attrString: string): Record<string, string> {
-  const attrs: Record<string, string> = {}
-  if (!attrString.trim()) return attrs
-
-  const attrRegex = /([a-zA-Z0-9_-]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g
-  let match: RegExpExecArray | null
-  while ((match = attrRegex.exec(attrString)) !== null) {
-    const name = match[1].toLowerCase()
-    const val = match[2] ?? match[3] ?? match[4] ?? ''
-    attrs[name] = decodeHtmlEntities(val)
-  }
-  return attrs
-}
-
-/**
- * Parsea una cadena con etiquetas HTML hacia un árbol seguro de nodos (AST)
- * sin utilizar dangerouslySetInnerHTML ni ejecutar scripts.
- */
-function parseHtmlToAst(html: string): HtmlAstNode[] {
-  if (!html) return []
-
-  const normalized = html.replace(/\r\n/g, '\n')
-
-  // Proteger el contenido interno de <pre>...</pre> y <code>...</code> para que cualquier < o > interno se preserve como texto
-  const codeBlocks: { lang: string; content: string }[] = []
-  const withCodePlaceholders = normalized
-    .replace(
-      /<pre[^>]*>\s*<code(?:\s+class=["'][^"']*language-([a-zA-Z0-9_-]+)[^"']*["'])?[^>]*>([\s\S]*?)<\/code>\s*<\/pre>/gi,
-      (_m, lang, inner) => {
-        const idx = codeBlocks.push({
-          lang: lang || '',
-          content: decodeHtmlEntities(inner.replace(/<br\s*\/?>/gi, '\n'))
-        }) - 1
-        return `<code data-code-idx="${idx}"></code>`
-      }
-    )
-    .replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (_m, inner) => {
-      const cleaned = inner.replace(/<br\s*\/?>/gi, '\n').replace(/<\/?code[^>]*>/gi, '')
-      const idx = codeBlocks.push({
-        lang: '',
-        content: decodeHtmlEntities(cleaned)
-      }) - 1
-      return `<code data-code-idx="${idx}"></code>`
-    })
-    .replace(/<code(?:\s+([^>]*))?>([\s\S]*?)<\/code>/gi, (fullMatch, attrStr, inner) => {
-      if (attrStr && attrStr.includes('data-code-idx')) {
-        return fullMatch
-      }
-      const langMatch = attrStr?.match(/language-([a-zA-Z0-9_-]+)/i)
-      const cleaned = inner.replace(/<br\s*\/?>/gi, '\n')
-      const idx = codeBlocks.push({
-        lang: langMatch ? langMatch[1] : '',
-        content: decodeHtmlEntities(cleaned)
-      }) - 1
-      return `<code data-code-idx="${idx}"></code>`
-    })
-
-  const root: HtmlElementNode = { type: 'element', tag: 'root', attrs: {}, children: [] }
-  const stack: HtmlElementNode[] = [root]
-
-  const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b([^>]*)>/g
-  let lastIndex = 0
-  let match: RegExpExecArray | null
-
-  while ((match = tagRegex.exec(withCodePlaceholders)) !== null) {
-    const fullTag = match[0]
-    const rawTagName = match[1].toLowerCase()
-    const attrString = match[2] || ''
-    const isClosing = fullTag.startsWith('</')
-    const isSelfClosing = fullTag.endsWith('/>') || VOID_TAGS.has(rawTagName)
-
-    if (match.index > lastIndex) {
-      const rawText = withCodePlaceholders.slice(lastIndex, match.index)
-      const textValue = decodeHtmlEntities(rawText)
-      if (textValue) {
-        stack[stack.length - 1].children.push({ type: 'text', value: textValue })
-      }
-    }
-
-    if (!ALLOWED_TAGS.has(rawTagName)) {
-      lastIndex = tagRegex.lastIndex
-      continue
-    }
-
-    if (isClosing) {
-      // Buscar la etiqueta abierta correspondiente en la pila
-      for (let i = stack.length - 1; i >= 1; i--) {
-        if (stack[i].tag === rawTagName) {
-          stack.length = i
-          break
-        }
-      }
-    } else {
-      const attrs = parseAttributes(attrString)
-
-      if (rawTagName === 'code' && attrs['data-code-idx'] !== undefined) {
-        const block = codeBlocks[Number(attrs['data-code-idx'])]
-        const codeNode: HtmlElementNode = {
-          type: 'element',
-          tag: 'code',
-          attrs: block?.lang ? { language: block.lang } : {},
-          children: [{ type: 'text', value: block?.content ?? '' }]
-        }
-        stack[stack.length - 1].children.push(codeNode)
-        // Consumir el </code> inmediato si existe
-        const rest = withCodePlaceholders.slice(tagRegex.lastIndex)
-        const closeMatch = rest.match(/^\s*<\/code>/i)
-        if (closeMatch) {
-          tagRegex.lastIndex += closeMatch[0].length
-        }
-        lastIndex = tagRegex.lastIndex
-        continue
-      }
-
-      const elementNode: HtmlElementNode = {
-        type: 'element',
-        tag: rawTagName,
-        attrs,
-        children: []
-      }
-      stack[stack.length - 1].children.push(elementNode)
-
-      if (!isSelfClosing) {
-        stack.push(elementNode)
-      }
-    }
-
-    lastIndex = tagRegex.lastIndex
-  }
-
-  if (lastIndex < withCodePlaceholders.length) {
-    const rawText = withCodePlaceholders.slice(lastIndex)
-    const textValue = decodeHtmlEntities(rawText)
-    if (textValue) {
-      stack[stack.length - 1].children.push({ type: 'text', value: textValue })
-    }
-  }
-
-  return root.children
-}
-
-function extractNodeText(node: HtmlAstNode): string {
-  if (node.type === 'text') return node.value
-  if (node.tag === 'br') return '\n'
-  return node.children.map(extractNodeText).join('')
-}
+// -------------------------------------------------------------
+// Componente de Bloque de Código
+// -------------------------------------------------------------
 
 function CodeBlock({
   language,
@@ -300,148 +130,471 @@ function CodeBlock({
   )
 }
 
-/**
- * Autodetecta URLs seguras dentro de nodos de texto plano.
- */
-function renderPlainTextWithLinks(
-  text: string,
-  isOwnMessage: boolean,
-  keyPrefix: string
-): React.ReactNode[] {
+// -------------------------------------------------------------
+// Parser Inline de Markdown (+ compatibilidad HTML básica)
+// -------------------------------------------------------------
+
+export function parseMarkdownInline(text: string): MarkdownInlineNode[] {
   if (!text) return []
 
-  const urlRegex = /((?:https?:\/\/|mailto:)[^\s<]+[^<.,:;"')\]\s])/g
-  const nodes: React.ReactNode[] = []
-  let lastIndex = 0
-  let match: RegExpExecArray | null
-  let idx = 0
+  const nodes: MarkdownInlineNode[] = []
+  let remaining = text
 
-  while ((match = urlRegex.exec(text)) !== null) {
-    if (match.index > lastIndex) {
-      nodes.push(text.slice(lastIndex, match.index))
+  // Expresiones regulares para tokens inline
+  const codeRegex = /^`([^`]+)`/
+  const boldAsteriskRegex = /^\*\*([^*]+)\*\*/
+  const boldUnderscoreRegex = /^__([^_]+)__/
+  const italicAsteriskRegex = /^\*([^*]+)\*/
+  const italicUnderscoreRegex = /^_([^_]+)_/
+  const strikeRegex = /^~~([^~]+)~~/
+  const linkMarkdownRegex = /^\[([^\]]+)\]\(([^)\s]+)(?:\s+"[^"]*")?\)/
+  const autoUrlRegex = /^((?:https?:\/\/|mailto:)[^\s<]+[^<.,:;"')\]\s])/
+
+  // Compatibilidad HTML retroactiva
+  const htmlBoldRegex = /^<(?:b|strong)>([\s\S]*?)<\/(?:b|strong)>/i
+  const htmlItalicRegex = /^<(?:i|em)>([\s\S]*?)<\/(?:i|em)>/i
+  const htmlUnderlineRegex = /^<u>([\s\S]*?)<\/u>/i
+  const htmlStrikeRegex = /^<(?:s|strike|del)>([\s\S]*?)<\/(?:s|strike|del)>/i
+  const htmlCodeRegex = /^<code>([\s\S]*?)<\/code>/i
+  const htmlAnchorRegex = /^<a\s+[^>]*href=["']([^"']*)["'][^>]*>([\s\S]*?)<\/a>/i
+  const htmlBrRegex = /^<br\s*\/?>/i
+
+  while (remaining.length > 0) {
+    // 1. Saltos de línea HTML
+    let match = remaining.match(htmlBrRegex)
+    if (match) {
+      nodes.push({ type: 'br' })
+      remaining = remaining.slice(match[0].length)
+      continue
     }
 
-    const rawUrl = match[1]
-    const safeHref = sanitizeUrl(rawUrl)
-    if (safeHref) {
-      nodes.push(
-        <a
-          key={`${keyPrefix}-url-${idx++}`}
-          href={safeHref}
-          target='_blank'
-          rel='noopener noreferrer'
-          className={cn(
-            'inline-flex items-center gap-0.5 font-semibold underline underline-offset-2 transition-opacity hover:opacity-85 break-all',
-            isOwnMessage
-              ? 'text-white decoration-blue-200'
-              : 'text-blue-600 dark:text-blue-400 decoration-blue-400/60'
-          )}
-        >
-          <span>{rawUrl}</span>
-          <ExternalLink className='size-3 shrink-0 inline' />
-        </a>
-      )
+    // 2. Código inline con backticks `code`
+    match = remaining.match(codeRegex)
+    if (match) {
+      nodes.push({ type: 'inlineCode', value: match[1] })
+      remaining = remaining.slice(match[0].length)
+      continue
+    }
+
+    // Código HTML <code>...</code>
+    match = remaining.match(htmlCodeRegex)
+    if (match) {
+      nodes.push({ type: 'inlineCode', value: decodeHtmlEntities(match[1]) })
+      remaining = remaining.slice(match[0].length)
+      continue
+    }
+
+    // 3. Enlaces Markdown [label](url)
+    match = remaining.match(linkMarkdownRegex)
+    if (match) {
+      nodes.push({
+        type: 'link',
+        label: match[1],
+        href: match[2]
+      })
+      remaining = remaining.slice(match[0].length)
+      continue
+    }
+
+    // Enlaces HTML <a href="...">...</a>
+    match = remaining.match(htmlAnchorRegex)
+    if (match) {
+      nodes.push({
+        type: 'link',
+        href: match[1],
+        label: decodeHtmlEntities(match[2].replace(/<[^>]*>/g, ''))
+      })
+      remaining = remaining.slice(match[0].length)
+      continue
+    }
+
+    // 4. Negrita **texto** o __texto__
+    match = remaining.match(boldAsteriskRegex) || remaining.match(boldUnderscoreRegex)
+    if (match) {
+      nodes.push({
+        type: 'bold',
+        children: parseMarkdownInline(match[1])
+      })
+      remaining = remaining.slice(match[0].length)
+      continue
+    }
+
+    // Negrita HTML <b> o <strong>
+    match = remaining.match(htmlBoldRegex)
+    if (match) {
+      nodes.push({
+        type: 'bold',
+        children: parseMarkdownInline(match[1])
+      })
+      remaining = remaining.slice(match[0].length)
+      continue
+    }
+
+    // 5. Cursiva *texto* o _texto_
+    match = remaining.match(italicAsteriskRegex) || remaining.match(italicUnderscoreRegex)
+    if (match) {
+      nodes.push({
+        type: 'italic',
+        children: parseMarkdownInline(match[1])
+      })
+      remaining = remaining.slice(match[0].length)
+      continue
+    }
+
+    // Cursiva HTML <i> o <em>
+    match = remaining.match(htmlItalicRegex)
+    if (match) {
+      nodes.push({
+        type: 'italic',
+        children: parseMarkdownInline(match[1])
+      })
+      remaining = remaining.slice(match[0].length)
+      continue
+    }
+
+    // 6. Tachado ~~texto~~
+    match = remaining.match(strikeRegex)
+    if (match) {
+      nodes.push({
+        type: 'strike',
+        children: parseMarkdownInline(match[1])
+      })
+      remaining = remaining.slice(match[0].length)
+      continue
+    }
+
+    // Tachado HTML <s>, <del>, <strike>
+    match = remaining.match(htmlStrikeRegex)
+    if (match) {
+      nodes.push({
+        type: 'strike',
+        children: parseMarkdownInline(match[1])
+      })
+      remaining = remaining.slice(match[0].length)
+      continue
+    }
+
+    // 7. Subrayado HTML <u>texto</u>
+    match = remaining.match(htmlUnderlineRegex)
+    if (match) {
+      nodes.push({
+        type: 'underline',
+        children: parseMarkdownInline(match[1])
+      })
+      remaining = remaining.slice(match[0].length)
+      continue
+    }
+
+    // 8. Auto-enlace https://... o mailto:...
+    match = remaining.match(autoUrlRegex)
+    if (match) {
+      nodes.push({
+        type: 'link',
+        href: match[1],
+        label: match[1],
+        isAuto: true
+      })
+      remaining = remaining.slice(match[0].length)
+      continue
+    }
+
+    // 9. Si el carácter actual no inicia ningún token especial, acumular texto plano
+    // Avanzar hasta el siguiente carácter especial o final
+    const nextSpecialIndex = remaining.search(/[`*~_\[<]|https?:\/\/|mailto:/)
+    if (nextSpecialIndex === -1) {
+      nodes.push({ type: 'text', value: decodeHtmlEntities(remaining) })
+      break
+    } else if (nextSpecialIndex === 0) {
+      // El carácter especial no formó un token válido (ej. un asterisco suelto)
+      nodes.push({ type: 'text', value: decodeHtmlEntities(remaining[0]) })
+      remaining = remaining.slice(1)
     } else {
-      nodes.push(rawUrl)
+      nodes.push({
+        type: 'text',
+        value: decodeHtmlEntities(remaining.slice(0, nextSpecialIndex))
+      })
+      remaining = remaining.slice(nextSpecialIndex)
     }
-
-    lastIndex = urlRegex.lastIndex
-  }
-
-  if (lastIndex < text.length) {
-    nodes.push(text.slice(lastIndex))
   }
 
   return nodes
 }
 
-function renderAstNodes(
-  nodes: HtmlAstNode[],
+// -------------------------------------------------------------
+// Parser de Bloques de Markdown
+// -------------------------------------------------------------
+
+function isTableSeparatorLine(line: string): boolean {
+  const trimmed = line.trim()
+  if (!trimmed.includes('|')) return false
+  const parts = trimmed
+    .split('|')
+    .map((p) => p.trim())
+    .filter((p) => p.length > 0)
+  if (parts.length === 0) return false
+  return parts.every((p) => /^:?-+:?$/.test(p))
+}
+
+function splitTableCells(line: string): string[] {
+  let trimmed = line.trim()
+  if (trimmed.startsWith('|')) trimmed = trimmed.slice(1)
+  if (trimmed.endsWith('|')) trimmed = trimmed.slice(0, -1)
+  return trimmed.split('|').map((c) => c.trim())
+}
+
+export function parseMarkdownToAst(content: string): MarkdownBlockNode[] {
+  if (!content) return []
+
+  // Normalizar saltos de línea y compatibilidad con bloques <pre><code> HTML antiguos
+  let normalized = content
+    .replace(/\r\n/g, '\n')
+    .replace(
+      /<pre[^>]*>\s*<code(?:\s+class=["'][^"']*language-([a-zA-Z0-9_-]+)[^"']*["'])?[^>]*>([\s\S]*?)<\/code>\s*<\/pre>/gi,
+      (_m, lang, inner) => {
+        const clean = decodeHtmlEntities(inner.replace(/<br\s*\/?>/gi, '\n'))
+        return `\n\`\`\`${lang || ''}\n${clean}\n\`\`\`\n`
+      }
+    )
+    .replace(/<pre[^>]*>([\s\S]*?)<\/pre>/gi, (_m, inner) => {
+      const clean = decodeHtmlEntities(inner.replace(/<br\s*\/?>/gi, '\n').replace(/<\/?code[^>]*>/gi, ''))
+      return `\n\`\`\`\n${clean}\n\`\`\`\n`
+    })
+
+  const lines = normalized.split('\n')
+  const blocks: MarkdownBlockNode[] = []
+  let i = 0
+
+  while (i < lines.length) {
+    const line = lines[i]
+
+    // 1. Bloque de código cercado ```lang ... ```
+    const codeFenceMatch = line.match(/^```\s*([a-zA-Z0-9_-]*)/)
+    if (codeFenceMatch) {
+      const language = codeFenceMatch[1] || undefined
+      const codeLines: string[] = []
+      i++
+      while (i < lines.length && !lines[i].startsWith('```')) {
+        codeLines.push(lines[i])
+        i++
+      }
+      if (i < lines.length && lines[i].startsWith('```')) {
+        i++ // consumir la línea de cierre ```
+      }
+      blocks.push({
+        type: 'code',
+        language,
+        code: codeLines.join('\n')
+      })
+      continue
+    }
+
+    // 2. Línea horizontal (---, ***, ___)
+    if (/^(?:-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
+      blocks.push({ type: 'hr' })
+      i++
+      continue
+    }
+
+    // 3. Encabezados # a ######
+    const headingMatch = line.match(/^(#{1,6})\s+(.+)$/)
+    if (headingMatch) {
+      const level = headingMatch[1].length as 1 | 2 | 3 | 4 | 5 | 6
+      blocks.push({
+        type: 'heading',
+        level,
+        children: parseMarkdownInline(headingMatch[2].trim())
+      })
+      i++
+      continue
+    }
+
+    // 4. Citas (Blockquote) > línea
+    if (/^>\s?/.test(line)) {
+      const quoteLines: string[] = []
+      while (i < lines.length && /^>\s?/.test(lines[i])) {
+        quoteLines.push(lines[i].replace(/^>\s?/, ''))
+        i++
+      }
+      blocks.push({
+        type: 'quote',
+        lines: quoteLines
+      })
+      continue
+    }
+
+    // 5. Tablas Markdown (| Header 1 | Header 2 |)
+    if (
+      line.trim().startsWith('|') &&
+      i + 1 < lines.length &&
+      isTableSeparatorLine(lines[i + 1])
+    ) {
+      const headerCells = splitTableCells(line)
+      const headers = headerCells.map((cell) => parseMarkdownInline(cell))
+      i += 2 // saltar cabecera y separador
+
+      const rows: MarkdownInlineNode[][][] = []
+      while (i < lines.length && lines[i].trim().includes('|')) {
+        const rowCells = splitTableCells(lines[i])
+        rows.push(rowCells.map((cell) => parseMarkdownInline(cell)))
+        i++
+      }
+
+      blocks.push({
+        type: 'table',
+        headers,
+        rows
+      })
+      continue
+    }
+
+    // 6. Listas no ordenadas (- item, * item, + item)
+    const unorderedMatch = line.match(/^(\s*)([-*+])\s+(.+)$/)
+    if (unorderedMatch) {
+      const items: MarkdownInlineNode[][] = []
+      while (i < lines.length) {
+        const itemMatch = lines[i].match(/^(\s*)([-*+])\s+(.+)$/)
+        if (!itemMatch) break
+        items.push(parseMarkdownInline(itemMatch[3]))
+        i++
+      }
+      blocks.push({
+        type: 'list',
+        ordered: false,
+        items
+      })
+      continue
+    }
+
+    // 7. Listas ordenadas (1. item, 2. item)
+    const orderedMatch = line.match(/^(\s*)(\d+)\.\s+(.+)$/)
+    if (orderedMatch) {
+      const startNum = parseInt(orderedMatch[2], 10)
+      const items: MarkdownInlineNode[][] = []
+      while (i < lines.length) {
+        const itemMatch = lines[i].match(/^(\s*)(\d+)\.\s+(.+)$/)
+        if (!itemMatch) break
+        items.push(parseMarkdownInline(itemMatch[3]))
+        i++
+      }
+      blocks.push({
+        type: 'list',
+        ordered: true,
+        start: startNum,
+        items
+      })
+      continue
+    }
+
+    // 8. Párrafo común / líneas de texto
+    const paragraphLines: string[] = []
+    while (
+      i < lines.length &&
+      !lines[i].startsWith('```') &&
+      !lines[i].match(/^(#{1,6})\s+/) &&
+      !/^(?:-{3,}|\*{3,}|_{3,})$/.test(lines[i].trim()) &&
+      !/^>\s?/.test(lines[i]) &&
+      !(lines[i].trim().startsWith('|') && i + 1 < lines.length && isTableSeparatorLine(lines[i + 1])) &&
+      !lines[i].match(/^(\s*)(?:[-*+]|\d+\.)\s+/)
+    ) {
+      paragraphLines.push(lines[i])
+      i++
+      // Si la línea actual es vacía, termina el bloque de párrafo
+      if (paragraphLines[paragraphLines.length - 1].trim() === '') {
+        break
+      }
+    }
+
+    const paragraphText = paragraphLines.join('\n').replace(/^\n+|\n+$/g, '')
+    if (paragraphText) {
+      // Reemplazar saltos de línea con nodos de salto o preservarlos
+      const inlineChildren: MarkdownInlineNode[] = []
+      const parts = paragraphText.split('\n')
+      parts.forEach((part, partIdx) => {
+        if (partIdx > 0) {
+          inlineChildren.push({ type: 'br' })
+        }
+        if (part) {
+          inlineChildren.push(...parseMarkdownInline(part))
+        }
+      })
+      blocks.push({
+        type: 'paragraph',
+        children: inlineChildren
+      })
+    }
+  }
+
+  return blocks
+}
+
+// -------------------------------------------------------------
+// Renderizado de Nodos del AST
+// -------------------------------------------------------------
+
+function renderInlineNodes(
+  nodes: MarkdownInlineNode[],
   isOwnMessage: boolean,
-  keyPrefix = 'node'
+  keyPrefix = 'inline'
 ): React.ReactNode[] {
   return nodes.map((node, idx) => {
     const key = `${keyPrefix}-${idx}`
 
-    if (node.type === 'text') {
-      return (
-        <React.Fragment key={key}>
-          {renderPlainTextWithLinks(node.value, isOwnMessage, key)}
-        </React.Fragment>
-      )
-    }
+    switch (node.type) {
+      case 'text':
+        return <React.Fragment key={key}>{node.value}</React.Fragment>
 
-    const { tag, attrs, children } = node
-
-    switch (tag) {
       case 'br':
         return <br key={key} />
 
-      case 'hr':
-        return (
-          <hr
-            key={key}
-            className={cn(
-              'my-2 border-t',
-              isOwnMessage
-                ? 'border-blue-400/40'
-                : 'border-neutral-200 dark:border-neutral-700'
-            )}
-          />
-        )
-
-      case 'b':
-      case 'strong':
+      case 'bold':
         return (
           <strong key={key} className='font-bold'>
-            {renderAstNodes(children, isOwnMessage, key)}
+            {renderInlineNodes(node.children, isOwnMessage, key)}
           </strong>
         )
 
-      case 'i':
-      case 'em':
+      case 'italic':
         return (
           <em key={key} className='italic'>
-            {renderAstNodes(children, isOwnMessage, key)}
+            {renderInlineNodes(node.children, isOwnMessage, key)}
           </em>
         )
 
-      case 'u':
+      case 'underline':
         return (
           <u key={key} className='underline underline-offset-2'>
-            {renderAstNodes(children, isOwnMessage, key)}
+            {renderInlineNodes(node.children, isOwnMessage, key)}
           </u>
         )
 
-      case 's':
       case 'strike':
-      case 'del':
         return (
           <del key={key} className='line-through opacity-85'>
-            {renderAstNodes(children, isOwnMessage, key)}
+            {renderInlineNodes(node.children, isOwnMessage, key)}
           </del>
         )
 
-      case 'code':
-      case 'pre': {
-        const rawCode = extractNodeText(node).replace(/^\n+|\n+$/g, '')
-        if (!rawCode.trim()) return null
+      case 'inlineCode':
         return (
-          <CodeBlock
+          <code
             key={key}
-            language={attrs.language}
-            code={rawCode}
-            isOwnMessage={isOwnMessage}
-          />
+            className={cn(
+              'inline-block rounded-md px-1.5 py-0.5 font-mono text-[11.5px]',
+              isOwnMessage
+                ? 'bg-blue-700/80 text-blue-100 border border-blue-400/40'
+                : 'bg-slate-900 dark:bg-slate-950 text-emerald-300 dark:text-emerald-400 border border-slate-700/50'
+            )}
+          >
+            {node.value}
+          </code>
         )
-      }
 
-      case 'a': {
-        const safeHref = sanitizeUrl(attrs.href || '')
-        const content = renderAstNodes(children, isOwnMessage, key)
+      case 'link': {
+        const safeHref = sanitizeUrl(node.href)
         if (!safeHref) {
-          return <React.Fragment key={key}>{content}</React.Fragment>
+          return <span key={key}>{node.label}</span>
         }
+
         return (
           <a
             key={key}
@@ -455,34 +608,53 @@ function renderAstNodes(
                 : 'text-blue-600 dark:text-blue-400 decoration-blue-400/60'
             )}
           >
-            <span>{content}</span>
+            <span>{node.label}</span>
             <ExternalLink className='size-3 shrink-0 inline' />
           </a>
         )
       }
 
-      case 'ul':
+      default:
+        return null
+    }
+  })
+}
+
+function renderBlockNodes(
+  blocks: MarkdownBlockNode[],
+  isOwnMessage: boolean
+): React.ReactNode[] {
+  return blocks.map((block, idx) => {
+    const key = `block-${idx}`
+
+    switch (block.type) {
+      case 'code':
         return (
-          <ul key={key} className='my-1.5 list-disc pl-5 space-y-1'>
-            {renderAstNodes(children, isOwnMessage, key)}
-          </ul>
+          <CodeBlock
+            key={key}
+            language={block.language}
+            code={block.code}
+            isOwnMessage={isOwnMessage}
+          />
         )
 
-      case 'ol':
+      case 'heading': {
+        const sizeClasses: Record<number, string> = {
+          1: 'text-sm sm:text-base font-bold mt-2 mb-1',
+          2: 'text-xs sm:text-sm font-bold mt-1.5 mb-1',
+          3: 'text-xs font-bold mt-1 mb-0.5',
+          4: 'text-xs font-semibold mt-1 mb-0.5',
+          5: 'text-xs font-semibold mt-0.5 mb-0.5',
+          6: 'text-xs font-medium mt-0.5 mb-0.5'
+        }
         return (
-          <ol key={key} className='my-1.5 list-decimal pl-5 space-y-1 marker:font-semibold'>
-            {renderAstNodes(children, isOwnMessage, key)}
-          </ol>
+          <div key={key} className={sizeClasses[block.level]}>
+            {renderInlineNodes(block.children, isOwnMessage, key)}
+          </div>
         )
+      }
 
-      case 'li':
-        return (
-          <li key={key} className='leading-relaxed'>
-            {renderAstNodes(children, isOwnMessage, key)}
-          </li>
-        )
-
-      case 'blockquote':
+      case 'quote':
         return (
           <blockquote
             key={key}
@@ -493,26 +665,28 @@ function renderAstNodes(
                 : 'border-violet-400 dark:border-violet-500 text-neutral-600 dark:text-neutral-300'
             )}
           >
-            {renderAstNodes(children, isOwnMessage, key)}
+            {block.lines.map((qLine, qIdx) => (
+              <div key={`${key}-line-${qIdx}`}>
+                {renderInlineNodes(parseMarkdownInline(qLine), isOwnMessage, `${key}-${qIdx}`)}
+              </div>
+            ))}
           </blockquote>
         )
 
-      case 'h1':
-      case 'h2':
-      case 'h3':
-      case 'h4':
-      case 'h5':
-      case 'h6': {
-        const sizeClass =
-          tag === 'h1'
-            ? 'text-sm sm:text-base font-bold mt-2 mb-1'
-            : tag === 'h2'
-            ? 'text-xs sm:text-sm font-bold mt-1.5 mb-1'
-            : 'text-xs font-bold mt-1 mb-0.5'
+      case 'list': {
+        const ListTag = block.ordered ? 'ol' : 'ul'
+        const listClass = block.ordered
+          ? 'my-1.5 list-decimal pl-5 space-y-1 marker:font-semibold'
+          : 'my-1.5 list-disc pl-5 space-y-1'
+
         return (
-          <div key={key} className={sizeClass}>
-            {renderAstNodes(children, isOwnMessage, key)}
-          </div>
+          <ListTag key={key} start={block.start} className={listClass}>
+            {block.items.map((item, itemIdx) => (
+              <li key={`${key}-item-${itemIdx}`} className='leading-relaxed'>
+                {renderInlineNodes(item, isOwnMessage, `${key}-${itemIdx}`)}
+              </li>
+            ))}
+          </ListTag>
         )
       }
 
@@ -528,94 +702,87 @@ function renderAstNodes(
             )}
           >
             <table className='w-full border-collapse text-left text-xs'>
-              {renderAstNodes(children, isOwnMessage, key)}
+              {block.headers.length > 0 && (
+                <thead
+                  className={cn(
+                    'border-b font-semibold',
+                    isOwnMessage
+                      ? 'border-blue-400/40 bg-blue-800/50 text-white'
+                      : 'border-neutral-200 dark:border-neutral-700/80 bg-neutral-100/80 dark:bg-neutral-800/80 text-neutral-800 dark:text-neutral-100'
+                  )}
+                >
+                  <tr>
+                    {block.headers.map((hdr, hIdx) => (
+                      <th key={`${key}-th-${hIdx}`} className='px-2.5 py-1.5 font-semibold whitespace-nowrap'>
+                        {renderInlineNodes(hdr, isOwnMessage, `${key}-th-${hIdx}`)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+              )}
+              <tbody className='divide-y divide-neutral-200/60 dark:divide-neutral-800/60'>
+                {block.rows.map((row, rIdx) => (
+                  <tr
+                    key={`${key}-tr-${rIdx}`}
+                    className={cn(
+                      'border-b last:border-b-0',
+                      isOwnMessage
+                        ? 'border-blue-400/30 hover:bg-blue-700/30'
+                        : 'border-neutral-200/60 dark:border-neutral-800/60 hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40'
+                    )}
+                  >
+                    {row.map((cell, cIdx) => (
+                      <td key={`${key}-td-${rIdx}-${cIdx}`} className='px-2.5 py-1.5 align-top'>
+                        {renderInlineNodes(cell, isOwnMessage, `${key}-td-${rIdx}-${cIdx}`)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
             </table>
           </div>
         )
 
-      case 'thead':
+      case 'hr':
         return (
-          <thead
+          <hr
             key={key}
             className={cn(
-              'border-b font-semibold',
+              'my-2 border-t',
               isOwnMessage
-                ? 'border-blue-400/40 bg-blue-800/50 text-white'
-                : 'border-neutral-200 dark:border-neutral-700/80 bg-neutral-100/80 dark:bg-neutral-800/80 text-neutral-800 dark:text-neutral-100'
+                ? 'border-blue-400/40'
+                : 'border-neutral-200 dark:border-neutral-700'
             )}
-          >
-            {renderAstNodes(children, isOwnMessage, key)}
-          </thead>
+          />
         )
 
-      case 'tbody':
-        return (
-          <tbody key={key} className='divide-y divide-neutral-200/60 dark:divide-neutral-800/60'>
-            {renderAstNodes(children, isOwnMessage, key)}
-          </tbody>
-        )
-
-      case 'tr':
-        return (
-          <tr
-            key={key}
-            className={cn(
-              'border-b last:border-b-0',
-              isOwnMessage
-                ? 'border-blue-400/30 hover:bg-blue-700/30'
-                : 'border-neutral-200/60 dark:border-neutral-800/60 hover:bg-neutral-50/80 dark:hover:bg-neutral-800/40'
-            )}
-          >
-            {renderAstNodes(children, isOwnMessage, key)}
-          </tr>
-        )
-
-      case 'th':
-        return (
-          <th key={key} className='px-2.5 py-1.5 font-semibold whitespace-nowrap'>
-            {renderAstNodes(children, isOwnMessage, key)}
-          </th>
-        )
-
-      case 'td':
-        return (
-          <td key={key} className='px-2.5 py-1.5 align-top'>
-            {renderAstNodes(children, isOwnMessage, key)}
-          </td>
-        )
-
-      case 'p':
-      case 'div':
-        return (
-          <div key={key} className='whitespace-pre-wrap break-words leading-relaxed'>
-            {renderAstNodes(children, isOwnMessage, key)}
-          </div>
-        )
-
-      case 'span':
+      case 'paragraph':
       default:
         return (
-          <span key={key}>
-            {renderAstNodes(children, isOwnMessage, key)}
-          </span>
+          <div key={key} className='whitespace-pre-wrap break-words leading-relaxed'>
+            {renderInlineNodes(block.children, isOwnMessage, key)}
+          </div>
         )
     }
   })
 }
+
+// -------------------------------------------------------------
+// Componente Principal
+// -------------------------------------------------------------
 
 export function MessageRichText({
   content,
   isOwnMessage = false,
   className
 }: MessageRichTextProps) {
-  const ast = parseHtmlToAst(content)
+  const blocks = parseMarkdownToAst(content)
 
   return (
     <div className={cn('space-y-1 whitespace-pre-wrap break-words leading-relaxed', className)}>
-      {renderAstNodes(ast, isOwnMessage)}
+      {renderBlockNodes(blocks, isOwnMessage)}
     </div>
   )
 }
 
 export default MessageRichText
-

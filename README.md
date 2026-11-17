@@ -561,21 +561,29 @@ La librería integra de forma nativa el flujo completo de atención mediante el 
 
 ---
 
-## 📝 6. Renderizado y Editor de Texto Enriquecido (HTML)
+## 📝 6. Renderizado y Editor de Texto Enriquecido (Markdown)
 
-### A. Renderizado de Etiquetas HTML en Burbujas (`<MessageRichText />`)
-Todos los mensajes (enviados, recibidos y del Bot IA) se procesan mediante un parser seguro de AST HTML hacia nodos de React (sin usar `dangerouslySetInnerHTML`):
-- **Etiquetas de estilo inline**: `<b>`, `<strong>` (negrita), `<i>`, `<em>` (cursiva), `<u>` (subrayado), `<s>`, `<strike>`, `<del>` (tachado) y `<a href="...">` (enlaces) además de autodetección de URLs en texto plano.
-- **Bloques de código (`CodeBlock`)**: Las etiquetas `<pre><code>...</code></pre>`, `<pre>...</pre>` y `<code>...</code>` se renderizan como bloques de código con cabecera y botón **Copiar** al portapapeles.
-- **Listas, Tablas y Estructuras**: Listas desordenadas (`<ul><li>`), listas numeradas (`<ol><li>`), tablas HTML (`<table>`, `<thead>`, `<tbody>`, `<tr>`, `<th>`, `<td>`), citas (`<blockquote>`), encabezados (`<h1>` a `<h6>`) y saltos/párrafos (`<p>`, `<div>`, `<br>`, `<hr>`).
+### A. Renderizado de Markdown en Burbujas (`<MessageRichText />`)
+Todos los mensajes (enviados, recibidos y del Bot IA) se procesan mediante un parser seguro de AST Markdown hacia nodos de React (sin dependencias pesadas y sin usar `dangerouslySetInnerHTML`):
+- **Estilos en línea (Inline Markdown)**: `**negrita**` / `__negrita__`, `*cursiva*` / `_cursiva_`, `~~tachado~~`, `<u>subrayado</u>` y enlaces Markdown `[título](https://...)` además de autodetección de URLs en texto plano (`https://...`).
+- **Bloques de código (`CodeBlock`)**: Sintaxis de triple acento grave ```` ```lenguaje\n...\n``` ```` y código en línea `` `código` ``. Se renderizan con cabecera de lenguaje, diseño estilizado y botón interactivo **Copiar** al portapapeles.
+- **Listas, Tablas y Estructuras**: Listas con viñetas (`- `, `* `, `+ `), listas numeradas (`1. `, `2. `), tablas Markdown (`| Col 1 | Col 2 |`), citas (`> cita`), encabezados (`#` a `######`), líneas divisorias (`---`) y saltos de línea automáticos.
+- **Compatibilidad retroactiva con HTML**: Procesa de manera transparente etiquetas HTML básicas seguras (`<b>`, `<i>`, `<code>`, `<pre>`, `<br>`, `<a>`) para garantizar que mensajes históricos guardados previamente sigan visualizándose a la perfección.
 - **Seguridad de Enlaces (`sanitizeUrl`)**: Permite únicamente protocolos seguros (`http:`, `https:`, `mailto:`) con `target="_blank"` y `rel="noopener noreferrer"`, bloqueando `javascript:` o `data:`.
 
-### B. Editor Visual WYSIWYG con Barra de Formato (`ConversationComposer`)
-El compositor de mensajes incorpora un editor visual enriquecido (`contentEditable`) con un botón **`Aa`** para desplegar la barra de herramientas sin mostrar símbolos Markdown:
-- Botones directos que aplican formato en tiempo real con etiquetas HTML: **Negrita** (`<b>`), **Cursiva** (`<i>`), **Subrayado** (`<u>`), **Tachado** (`<s>`), **Lista de viñetas** (`<ul><li>`), **Lista numerada** (`<ol><li>`), **Código** (`<code>`) e **Insertar enlace** (`<a href="...">`).
-- **Indicadores de formato activo**: Cada botón se ilumina automáticamente cuando el cursor o la selección actual tiene aplicado ese estilo, y el icono **`Aa`** muestra un punto indicador activo.
-- **Atajos de teclado**: `Ctrl+B` / `Cmd+B` (negrita), `Ctrl+I` / `Cmd+I` (cursiva), `Ctrl+U` / `Cmd+U` (subrayado), `Ctrl+K` / `Cmd+K` (insertar enlace).
-- **Bloques de código en vivo**: Al pulsar el botón de código se inserta un bloque visual `<code>` directamente en el input; `Shift+Enter` añade saltos de línea dentro del código y volver a pulsar el botón (o flecha derecha) permite continuar escribiendo fuera del bloque.
+### B. Editor de Mensajes con Formato Markdown (`ConversationComposer`)
+El compositor de mensajes incorpora un editor de texto multilínea autoajustable con un botón **`Aa`** para desplegar la barra de herramientas de formato Markdown:
+- **Botones de formato Markdown**:
+  - **Negrita**: Aplica o envuelve en `**texto**` (`Ctrl+B` / `Cmd+B`).
+  - **Cursiva**: Aplica o envuelve en `*texto*` (`Ctrl+I` / `Cmd+I`).
+  - **Subrayado**: Aplica o envuelve en `<u>texto</u>` (`Ctrl+U` / `Cmd+U`).
+  - **Tachado**: Aplica o envuelve en `~~texto~~` (`Ctrl+Shift+X` / `Cmd+Shift+X`).
+  - **Lista de viñetas**: Antepone `- ` a cada línea seleccionada.
+  - **Lista numerada**: Antepone `1. `, `2. `, etc., a las líneas seleccionadas.
+  - **Código**: Inserta `` `código` `` o bloque multilínea ```` ```\n...\n``` ```` (`Ctrl+E` / `Cmd+E`).
+  - **Insertar enlace**: Barra interactiva para ingresar texto y URL segura generando `[texto](url)` (`Ctrl+K` / `Cmd+K`).
+  - **Vista previa Markdown**: Botón de alternancia para previsualizar el mensaje renderizado antes de enviarlo.
+- **Atajos y comportamiento**: `Enter` para enviar mensaje, `Shift+Enter` para salto de línea, soporte para adjuntar archivos (`Paperclip`) y pegar capturas de pantalla directamente desde el portapapeles (`onPaste`).
 
 ---
 

@@ -125,17 +125,20 @@ export function ConversationChatHeader({
       {/* Acciones Rápidas del Agente */}
       <div className='flex items-center gap-1 shrink-0'>
         {isBot && !isClosed && onStartVoiceCall && (
-          <Button
-            variant='outline'
-            size='sm'
+          <button
+            type='button'
             onClick={onStartVoiceCall}
             title='Llamar al Asistente de Voz (Interactivo)'
             aria-label='Llamar al Asistente de Voz'
-            className='h-8 px-2 gap-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border-emerald-300 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/30 hover:bg-emerald-600 hover:text-white dark:hover:bg-emerald-600 dark:hover:text-white hover:border-emerald-600 transition-all cursor-pointer'
+            className='group relative inline-flex h-8 items-center gap-1.5 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 sm:px-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300 dark:border-emerald-400/30 dark:bg-emerald-400/10 hover:bg-emerald-500/20 dark:hover:bg-emerald-400/20 hover:border-emerald-500/40 dark:hover:border-emerald-400/50 shadow-2xs backdrop-blur-xs transition-all duration-200 active:scale-[0.97] cursor-pointer'
           >
-            <Phone className='size-3.5' />
-            <span className='hidden sm:inline'>Llamar</span>
-          </Button>
+            <span className='relative flex size-2 shrink-0'>
+              <span className='absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75' />
+              <span className='relative inline-flex size-2 rounded-full bg-emerald-500 dark:bg-emerald-400' />
+            </span>
+            <Phone className='size-3.5 text-emerald-600 dark:text-emerald-400 transition-transform duration-200 group-hover:scale-110' />
+            <span className='tracking-tight'>Llamar</span>
+          </button>
         )}
 
         {renderOptions?.customHeaderButtons !== undefined ? (
