@@ -1,6 +1,7 @@
 import { VoiceCallCallbacks, VoiceConnectionParams } from '../../types/voice.types';
 export interface VoiceCallClientOptions {
     onAnalyserReady?: (analyser: AnalyserNode | null) => void;
+    onOutputAnalyserReady?: (analyser: AnalyserNode | null) => void;
 }
 /**
  * Cliente WebSocket full-duplex para el Asistente Telefónico de Voz SDI.
@@ -18,6 +19,7 @@ export declare class VoiceCallClient {
     constructor(config: VoiceConnectionParams, callbacks?: VoiceCallCallbacks, options?: VoiceCallClientOptions);
     isConnected(): boolean;
     getAnalyserNode(): AnalyserNode | null;
+    getOutputAnalyserNode(): AnalyserNode | null;
     start(): Promise<void>;
     private handleJsonEvent;
     setMuted(muted: boolean): void;

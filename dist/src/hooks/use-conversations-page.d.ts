@@ -10,8 +10,8 @@ export declare const useConversationsPage: ({ showToastOnUnread, isActive }?: Us
     selectedConversation: Conversation | undefined;
     closedFilter: "0" | "1";
     setClosedFilter: import('react').Dispatch<import('react').SetStateAction<"0" | "1">>;
-    typeFilter: "bot" | "direct" | "group" | "all";
-    setTypeFilter: import('react').Dispatch<import('react').SetStateAction<"bot" | "direct" | "group" | "all">>;
+    typeFilter: "group" | "bot" | "direct" | "all";
+    setTypeFilter: import('react').Dispatch<import('react').SetStateAction<"group" | "bot" | "direct" | "all">>;
     searchQuery: string;
     setSearchQuery: import('react').Dispatch<import('react').SetStateAction<string>>;
     isContextPanelOpen: boolean;
@@ -25,6 +25,7 @@ export declare const useConversationsPage: ({ showToastOnUnread, isActive }?: Us
     currentUserId: string;
     selectConversation: (id: string) => void;
     unselectConversation: () => void;
+    refetchConversations: () => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<Conversation[]>, any, {}, any> | undefined>;
     setIsContextPanelOpen: import('react').Dispatch<import('react').SetStateAction<boolean>>;
     setIsNewConversationOpen: import('react').Dispatch<import('react').SetStateAction<boolean>>;
     goBackToConversationList: () => void;

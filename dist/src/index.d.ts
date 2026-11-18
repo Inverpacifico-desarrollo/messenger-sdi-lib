@@ -1,5 +1,6 @@
 export { ChatProvider, useChatContext, useOptionalChatContext, type ChatConfig, type ChatContextValue, type ChatProviderProps } from './context/chat-context';
 export { ActiveConversationProvider, useActiveConversation, useRequiredActiveConversation, activeConversationStore, type ActiveConversationContextValue, type ActiveConversationProviderProps } from './context/active-conversation-context';
+export { voiceCallStore, useActiveVoiceCall, type ActiveVoiceCallSession } from './context/voice-call-context';
 export { FloatingChat, type FloatingChatProps, type FloatingChatView, type FloatingChatCorner } from './components/floating-chat';
 export { ConversationChatPanel, type ConversationChatPanelProps } from './components/conversation-chat-panel';
 export { ConversationChatHeader, type ConversationChatHeaderProps, type ConversationChatHeaderRenderOptions, type ConversationRenderOptions } from './components/conversation-chat-header';

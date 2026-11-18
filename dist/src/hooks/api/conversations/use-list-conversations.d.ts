@@ -18,5 +18,6 @@ declare const useListConversations: (props?: Props) => {
     isFetching: boolean;
     errors: any;
     refetch: () => Promise<AxiosResponse<ResponseAPI<Conversation[]>, any, {}, any> | undefined>;
+    setData: import('react').Dispatch<import('react').SetStateAction<AxiosResponse<ResponseAPI<Conversation[]>, any, {}, any> | undefined>>;
 };
 export default useListConversations;

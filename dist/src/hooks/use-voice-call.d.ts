@@ -23,6 +23,7 @@ export declare function useVoiceCall({ open, sessionId, conversationId, userId, 
     hasPermission: boolean | null;
     micError: string | null;
     analyserNode: AnalyserNode | null;
+    outputAnalyserNode: AnalyserNode | null;
     userRms: number;
     botRms: number;
     activeVUSegments: number;
