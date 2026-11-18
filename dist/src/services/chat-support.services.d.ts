@@ -1,0 +1,6 @@
+import { ChatBotQueueStatusResponse, ChatBotQueueToTicketPayload, ChatBotQueueToTicketResponse, EscalateChatSupportPayload, EscalateChatSupportResponse, RequestChatSupportPayload, RequestChatSupportResponse, ResolveChatSupportPayload, ResolveChatSupportResponse } from '../types/chat-support.types';
+export declare const requestChatSupportService: (data: RequestChatSupportPayload) => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<RequestChatSupportResponse>, any, {}, any>>;
+export declare const escalateChatSupportService: (data: EscalateChatSupportPayload) => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<EscalateChatSupportResponse>, any, {}, any>>;
+export declare const resolveChatSupportService: (data: ResolveChatSupportPayload) => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<ResolveChatSupportResponse>, any, {}, any>>;
+export declare const chatBotQueueStatusService: (sessionId: string) => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<ChatBotQueueStatusResponse>, any, {}, any>>;
+export declare const chatBotQueueToTicketService: (data: ChatBotQueueToTicketPayload) => Promise<import('axios').AxiosResponse<import('../types/api.types').ResponseAPI<ChatBotQueueToTicketResponse>, any, {}, any>>;

@@ -1,0 +1,4 @@
+import { default as React } from 'react';
+import { FloatingChatProps } from './types';
+export declare function FloatingChat({ canViewChatList, canRequestSupport, supportWithBot, defaultView, defaultCorner, initialConversation, title, hiddenPaths, showOnlyPaths, hideCondition, hidden, currentPath, showToastOnUnread, renderOptions, onActiveConversationChange }: FloatingChatProps): React.JSX.Element | null | undefined;
+export default FloatingChat;
