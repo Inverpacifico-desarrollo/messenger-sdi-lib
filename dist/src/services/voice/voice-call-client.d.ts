@@ -13,9 +13,14 @@ export declare class VoiceCallClient {
     private ws;
     private audioEngine;
     private connected;
+    private wasEverConnected;
     private isDisposed;
+    private isCallFinalized;
+    private isSimulatingMicroCut;
     private levelIntervalId;
     private heartbeatIntervalId;
+    private microCutTimerId;
+    private reconnectTimerId;
     constructor(config: VoiceConnectionParams, callbacks?: VoiceCallCallbacks, options?: VoiceCallClientOptions);
     isConnected(): boolean;
     getAnalyserNode(): AnalyserNode | null;
@@ -28,5 +33,13 @@ export declare class VoiceCallClient {
     hangup(options?: {
         autoHangup?: boolean;
     }): Promise<void>;
+    private formatMicrophoneError;
+    retryMicrophone(): Promise<boolean>;
+    /**
+     * Simula un micro-corte de red temporal (p.ej. 2s) pausando tramas PCM
+     * y emitiendo la secuencia session.reconnecting -> session.reconnected
+     * sin cortar AudioEngine ni finalizar la sesión.
+     */
+    simulateMicroCut(durationMs?: number): void;
     cleanup(): void;
 }

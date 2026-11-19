@@ -10,5 +10,10 @@ export interface VoiceCallDialogProps {
     senderMessengerId?: string | number;
     wsUrl?: string;
     onCallEnded?: (result: VoiceCallEndResult) => void;
+    onResolveSubmit?: (data: {
+        rating: number;
+        comment: string;
+        helpful: boolean;
+    }) => Promise<void> | void;
 }
-export declare function VoiceCallDialog({ open, onOpenChange, sessionId, conversationId, userId, userAuthId, senderMessengerId, wsUrl, onCallEnded }: VoiceCallDialogProps): React.JSX.Element | null;
+export declare function VoiceCallDialog({ open, onOpenChange, sessionId, conversationId, userId, userAuthId, senderMessengerId, wsUrl, onCallEnded, onResolveSubmit }: VoiceCallDialogProps): React.JSX.Element | null;

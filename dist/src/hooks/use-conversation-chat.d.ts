@@ -1,18 +1,21 @@
+import { default as React } from 'react';
 import { Conversation } from '../types/conversation.types';
 import { ConversationMessage, Message } from '../types/message.types';
+import { UserChat } from '../types/user-chat.types';
 export interface UseConversationChatOptions {
     onCloseSuccess?: () => void;
 }
 export declare const useConversationChat: (conversation: Conversation, options?: UseConversationChatOptions) => {
     messages: ConversationMessage[];
     optimisticMessages: Message[];
-    scrollRef: import('react').RefObject<HTMLDivElement>;
+    scrollRef: React.RefObject<HTMLDivElement>;
     conversationName: string;
     inputText: string;
     pendingFile: File | null;
     isClosed: boolean;
     isClosing: boolean;
     isSending: boolean;
+    isBotStreaming: boolean;
     isUploading: boolean;
     isFetchingNextPage: boolean;
     hasNextPage: boolean;
@@ -21,11 +24,11 @@ export declare const useConversationChat: (conversation: Conversation, options?:
     newMessagesCount: number;
     typingUser: string | null;
     visibleDate: string;
-    currentUser: import('..').UserChat | null;
+    currentUser: UserChat | null;
     currentUserId: string;
     scrollToBottom: () => void;
     setInputText: (text: string) => void;
-    setPendingFile: import('react').Dispatch<import('react').SetStateAction<File | null>>;
+    setPendingFile: React.Dispatch<React.SetStateAction<File | null>>;
     handleSendMessage: (customText?: string) => Promise<void>;
     handleSelectFile: (file: File) => void;
     handleCloseConversation: () => Promise<void>;

@@ -11,6 +11,8 @@ export { NewConversationDialog, type NewConversationDialogProps } from './compon
 export { EscalateSupportDialog, type EscalateSupportDialogProps } from './components/escalate-support-dialog';
 export { ResolveSupportDialog, type ResolveSupportDialogProps } from './components/resolve-support-dialog';
 export { MessageRichText, sanitizeUrl, type MessageRichTextProps } from './components/message-rich-text';
+export { BotWikiCard, type BotWikiCardProps } from './components/bot-wiki-card';
+export { BotActionButtons, type BotActionButtonsProps } from './components/bot-action-buttons';
 export { VoiceCallDialog, type VoiceCallDialogProps } from './components/voice/voice-call-dialog';
 export { VoiceCallHeader, type VoiceCallHeaderProps } from './components/voice/voice-call-header';
 export { VoiceAudioVisualizerCard, type VoiceAudioVisualizerCardProps } from './components/voice/voice-audio-visualizer-card';
@@ -34,13 +36,14 @@ export { useVoiceMicrophone, type UseVoiceMicrophoneOptions, type UseVoiceMicrop
 export { useCheckHasPermissionMessenger, hasMessengerPermission, type CheckMessengerPermissionParams, type PermissionOperator } from './hooks/use-check-has-permission-messenger';
 export type { PermissionsMessenger } from './types/permission.types';
 export type { Conversation, ConversationType, CreateConversationPayload, TypingEvent, UnreadEvent } from './types/conversation.types';
-export type { Message, MessageAttachment, MessageType, MessageActionButton, MessageMetadata, CreateMessagePayload, UploadMessageFilePayload } from './types/message.types';
+export type { Message, MessageAttachment, MessageType, MessageActionButton, BotWikiArticle, MessageMetadata, CreateMessagePayload, UploadMessageFilePayload } from './types/message.types';
 export type { UserChat } from './types/user-chat.types';
-export type { RequestChatSupportPayload, RequestChatSupportResponse, EscalateChatSupportPayload, EscalateChatSupportResponse, ResolveChatSupportPayload, ResolveChatSupportResponse, ChatBotQueueStatusResponse, ChatBotQueueToTicketPayload, ChatBotQueueToTicketResponse } from './types/chat-support.types';
+export type { RequestChatSupportPayload, RequestChatSupportResponse, EscalateChatSupportPayload, EscalateChatSupportResponse, ResolveChatSupportPayload, ResolveChatSupportResponse, ChatBotQueueStatusResponse, ChatBotQueueToTicketPayload, ChatBotQueueToTicketResponse, BotChatHistoryItem, SendBotMessagePayload, BotStreamMetaEvent, BotStreamDeltaEvent, BotStreamDoneEvent, BotStreamCallbacks } from './types/chat-support.types';
 export type { VoiceCallState, VoiceCallContextBadges, VoiceCallerTicket, VoiceCallerContext, VoiceMatchedArticle, VoiceToolState, VoiceTranscriptItem, VoiceCallEndResult, VoiceFinalizedPayload, VoiceClientPingCommand, VoiceClientMuteCommand, VoiceClientHangupCommand, VoiceClientImageCommand, VoiceClientTextPromptCommand, VoiceClientCommand, VoiceSessionReadyEvent, VoiceAssistantSpeakingEvent, VoiceAssistantTurnCompleteEvent, VoiceAssistantTranscriptEvent, VoiceServerEvent, VoiceConnectionParams, VoiceCallCallbacks } from './types/voice.types';
 export { LIB_VERSION } from './utils/version';
 export { closeConversationService } from './services/conversation.services';
 export { requestChatSupportService, escalateChatSupportService, resolveChatSupportService, chatBotQueueStatusService, chatBotQueueToTicketService } from './services/chat-support.services';
+export { sendBotMessageStream, sendBotMessageSync, type SendBotMessageStreamOptions } from './services/bot.service';
 export { buildVoiceWebSocketUrl, VoiceCallClient, type VoiceCallClientOptions, VoiceAudioEngine, type VoiceAudioEngineOptions } from './services/voice.service';
-export { saveConversationSessionId, getConversationSessionId, removeConversationSessionId } from './utils/session-storage.util';
+export { saveConversationSessionId, getConversationSessionId, getStoredConversationSession, getAllConversationSessions, removeConversationSessionId } from './utils/session-storage.util';
 export { playNotificationSound, type NotificationSoundType, type PlaySoundOptions } from './utils/audio.util';
