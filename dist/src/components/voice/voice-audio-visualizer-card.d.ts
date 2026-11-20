@@ -6,10 +6,11 @@ export interface VoiceAudioVisualizerCardProps {
     isMuted: boolean;
     hasPermission: boolean | null;
     analyserNode: AnalyserNode | null;
+    outputAnalyserNode?: AnalyserNode | null;
     userRms: number;
     botRms: number;
     activeVUSegments: number;
     activeTool: VoiceToolState | null;
     onRequestMicrophone: () => void;
 }
-export declare function VoiceAudioVisualizerCard({ callState, statusText, isMuted, hasPermission, analyserNode, userRms, botRms, activeVUSegments, activeTool, onRequestMicrophone }: VoiceAudioVisualizerCardProps): React.JSX.Element;
+export declare function VoiceAudioVisualizerCard({ callState, statusText, isMuted, hasPermission, analyserNode, outputAnalyserNode, userRms, botRms, activeVUSegments, activeTool, onRequestMicrophone }: VoiceAudioVisualizerCardProps): React.JSX.Element;

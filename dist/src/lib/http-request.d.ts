@@ -2,6 +2,7 @@ import { AxiosRequestConfig, AxiosResponse, Method } from 'axios';
 import { ResponseAPI } from '../types/api.types';
 interface ChatHttpConfig {
     apiBaseUrl: string;
+    apiHelpdeskBaseUrl?: string;
     authToken: string;
 }
 interface HttpRequestProps extends Omit<AxiosRequestConfig, 'data' | 'params' | 'url' | 'method'> {
@@ -12,6 +13,8 @@ interface HttpRequestProps extends Omit<AxiosRequestConfig, 'data' | 'params' | 
     headers?: Record<string, string>;
 }
 export declare const configureChatHttp: (config: ChatHttpConfig) => void;
+export declare const getChatAuthHeaders: () => Record<string, string>;
 export declare const chatApiUrl: (service: string, version: string) => string;
+export declare const helpdeskApiUrl: (service: string, version: string) => string;
 export declare const httpRequest: <TResponse>({ data, url, params, method, headers, ...rest }: HttpRequestProps) => Promise<AxiosResponse<ResponseAPI<TResponse>>>;
 export {};

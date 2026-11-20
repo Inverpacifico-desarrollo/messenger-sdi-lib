@@ -5,6 +5,13 @@ export interface VoiceCallEndedSummaryProps {
     transcriptsCount: number;
     outcomeType: string;
     contextBadges: VoiceCallContextBadges;
-    onClose: () => void;
+    sessionId?: string;
+    conversationId?: string | number;
+    onClose: (wasResolved?: boolean) => void;
+    onSubmitRating?: (data: {
+        rating: number;
+        comment: string;
+        helpful: boolean;
+    }) => Promise<void> | void;
 }
-export declare function VoiceCallEndedSummary({ formattedDuration, transcriptsCount, outcomeType, contextBadges, onClose }: VoiceCallEndedSummaryProps): React.JSX.Element;
+export declare function VoiceCallEndedSummary({ formattedDuration, transcriptsCount, outcomeType, contextBadges, sessionId, conversationId, onClose, onSubmitRating }: VoiceCallEndedSummaryProps): React.JSX.Element;

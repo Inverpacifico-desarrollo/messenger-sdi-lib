@@ -14,6 +14,11 @@ export interface ChatConfig {
      * Si no se especifica, se deriva automáticamente desde `apiBaseUrl`.
      */
     voiceWsUrl?: string;
+    /**
+     * URL de la api de helpdesk
+     * Si no se especifica, se deriva automáticamente desde `apiBaseUrl`.
+     */
+    apiHelpdeskBaseUrl?: string;
     reverb: {
         key: string;
         host: string;
