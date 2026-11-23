@@ -3487,7 +3487,7 @@ function An({
     }
   );
 }
-const Mn = "1.3.0", Ln = {
+const Mn = "1.3.1", Ln = {
   version: Mn
 }, or = Ln.version;
 function Dt({
